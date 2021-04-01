@@ -44,6 +44,9 @@ $teams | % {
     Write-Debug $_ 
 } 
 
+# refresh login, if needed
+$session = &"support/rest/sast/login.ps1" -existing_session $session -dbg:$dbg.IsPresent
+
 Write-Output "Scans section starting"
 
 $report_index = New-Object 'System.Collections.Generic.Dictionary[string,string]'
@@ -71,6 +74,9 @@ $report_index.Keys |%{
     $reportstatus = &"support/rest/sast/reportStatus.ps1" $session $reportId
     
     while ($reportstatus.status.value -ne "Created" -and $reportstatus.status.value -ne "Failed") {
+        # refresh login, if needed
+        $session = &"support/rest/sast/login.ps1" -existing_session $session -dbg:$dbg.IsPresent
+        #get the status of the report
         $reportstatus = &"support/rest/sast/reportStatus.ps1" $session $reportId
         Write-Debug $reportstatus.status.value
     }
@@ -96,7 +102,7 @@ $report_index.Keys | %{
     $outputPath = $PSScriptRoot + "\Output"
 
     Write-Debug "ScanId = $scanid , team name = $teamName, project name = $projectName, reportId = $reportid"
-    Write-Output "Downloading report for $teamName\$projectName"
+    Write-Output "Downloading report for $teamName/$projectName"
 
 
     &"support/rest/sast/getreport.ps1" $session $reportid $teamName $projectName $outputPath

@@ -6,7 +6,7 @@
     reportType = "PDF"
     
     queries = @{
-        all = 1
+        all = 0
         ids = 0
     }
 
@@ -20,7 +20,7 @@
 
     resultState = @{
         all = 1
-        ids = 0
+        ids = 1
     }
 
     displayCategories = @{
