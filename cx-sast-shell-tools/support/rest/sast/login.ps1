@@ -35,11 +35,11 @@ else {
     $soap_session = & $soap_login_script $sast_url $username $password
     
     if ($true -eq $soap_session.v9) {
-        $query_elems.scope = "sast_api"
+        $query_elems.scope = "sast_api access_control_api"
         $query_elems.client_id = "resource_owner_sast_client"
     }
     else {
-        $query_elems.scope = "sast_rest_api"
+        $query_elems.scope = "sast_rest_api acess_control_api"
         $query_elems.client_id = "resource_owner_client"
     }
     
