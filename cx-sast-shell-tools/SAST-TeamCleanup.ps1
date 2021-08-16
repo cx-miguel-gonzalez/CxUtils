@@ -5,6 +5,8 @@ param(
     [String]$password,
     [Parameter(Mandatory = $true)]
     [Int]$monthsInactivity,
+    [Parameter(Mandatory = $true)]
+    [String]$defaultTeam,
     [Switch]$dbg
 )
 
@@ -23,7 +25,14 @@ $session = &"support/rest/sast/login.ps1" $sast_url $username $password -dbg:$db
 
 #List of teams that do not have any sub teams underneath them
 $teams = &"support/rest/sast/teams.ps1" $session
-$subTeams = $teams | Where-Object {$teams.parentid -notcontains $_.id}
+$defaultTeamId = $teams | Where-Object {$_.Name = $defaultTeam}
+
+if(!$defaultTeamId){
+    Write-Output "Unable to find the Default Team. Please provide a valid Default Team Name"
+    throw
+}
+
+$subTeams = $teams | Where-Object {$teams.parentid -notcontains $_.id -and $teams.id -ne $defaultTeamId}
 #Get list of all projects
 $projects = &"support/rest/sast/projects.ps1" $session
 #Get list of all users
@@ -91,6 +100,7 @@ if($confirmation -eq "y"){
         $teamProjects = $projects | Where-Object {$_.teamId -eq $teamid}
         #Delete all projects under this team
         $teamProjects | %{
+            #Make sure 
             &"support/rest/sast/deleteproject.ps1" $session $_.id
         }
         #Delete the teams now that they have no projects left in them
@@ -108,6 +118,8 @@ function UserCheck {
         [Parameter(Mandatory=$true)]
         [string]$teamId,
         [Parameter(Mandatory=$true)]
+        [string]$defaultTeamId,
+        [Parameter(Mandatory=$true)]
         [hashtable]$users
     )
 
@@ -116,7 +128,14 @@ function UserCheck {
     $teamUsers | %{
         $totalTeams = $_.teamId.Count
 
-        
+        if($totalTeams -eq 1){
+            Write-Debug "This user only belongs to 1 team. We need to move them or delete them."
+            $updateUser = $_
+            $updateUser.teamIds = @($defaultTeamId)
+
+            &"support/rest/sast/modifyuser.ps1" $session $updateUser
+        }
+
     }
     
 }
