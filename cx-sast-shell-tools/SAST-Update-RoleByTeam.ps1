@@ -28,6 +28,7 @@ $teams = &"support/rest/sast/teams.ps1" $session
 
 #Get all users that belong to one of the teams/subteams
 $targetTeams = $teams | Where-Object {$_ -like "*$teamName*"}
+Write-Output $targetTeams
 
 #Find all users that belong to any of the target teams
 $allUsers = &"support/rest/sast/getusers.ps1" $session
@@ -38,9 +39,16 @@ $allUsers | % {
     $currentUser = $_
     $currentUser.teamIds | % {
         #Write-Debug $_
-        if($targetTeams.id.Contains($_)){
-            $withinTeam = $true
-        }   
+        if($targetTeams.id.Count -eq 1){
+            if($targetTeams.id -eq ($_)){
+                $withinTeam = $true
+            }
+        }
+        else{
+            if($targetTeams.id.Contains($_)){
+                $withinTeam = $true
+            }   
+        }
     }
     if($withinTeam){
         $user_index += $currentUser
@@ -54,8 +62,15 @@ $user_index | %{
     $teamsExclusive = $true
     $_.teamids | %{
         #Write-Output $_
-        if(-not($targetTeams.id.contains($_))){
-            $teamsExclusive = $false
+        if($targetTeams.id.Count -eq 1){
+            if(-not($targetTeams.id -eq $_)){
+                $teamsExclusive = $false
+            }
+        }
+        else{
+            if(-not($targetTeams.id.contains($_))){
+                $teamsExclusive = $false
+            }
         }
     }
     if($teamsExclusive -eq $true){

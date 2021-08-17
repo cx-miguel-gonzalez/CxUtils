@@ -20,7 +20,7 @@ Write-Debug $request_url
 
 
 try {
-    $response = Invoke-RestMethod -Method "PUT" -Uri $request_url -Headers $headers -ContentType "application/json" -Body $Body
+    $response = Invoke-RestMethod -Method "PUT" -Uri $request_url -Headers $headers -ContentType "application/json" -Body ([System.Text.Encoding]::UTF8.GetBytes($Body))
     return $response
 }
 catch {
