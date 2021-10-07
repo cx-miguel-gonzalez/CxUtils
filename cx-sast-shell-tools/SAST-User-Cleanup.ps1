@@ -42,11 +42,19 @@ $targetUsers | %{
     Write-Output $output
 }
 
-$verification = Read-Host -Prompt "Are you sure you want to delete these users (y/n)"
+$output = [String]::Format("{0} users will be deleted", $targetUsers.count)
+Write-Output $output
+
+$verification = Read-Host -Prompt "Are you sure you want to delete all  these users (y/n)"
 #delete target users
 if($verification -eq "y"){
     Write-Debug "You have confirmed your're going to delete the users"
     $targetUsers | %{
         &"support/rest/sast/deleteuser.ps1" $session $_.id
     }
+
+    $output = [String]::Format("{0} users have been successfully deleted", $targetUsers.count)
+    Write-Output $output
+
 }
+

@@ -94,14 +94,25 @@ else{
 
 $output = [string]::Format("Preparing to update users under the {0} team and set their role to {1}", $teamName, $roleName)
 Write-Output $output
-#start updating all the users
-$userCount = 0
-$targetUsers | %{
-    $userUpdate = $_
-    $userUpdate.roleids = @($targetRole.id)
 
-    &"support\rest\sast\modifyuser.ps1" $session $_
-    $userCount++
+$output = [string]::Format("Totoal number of users to be affected: {0}", $targetUsers.count)
+Write-Output $output
+#add the prompt
+$verification = Read-Host -Prompt "Are you sure you want to update all these users (y/n)"
+
+if($verification -eq "y"){
+    #start updating all the users
+    $userCount = 0
+    $targetUsers | %{
+        $userUpdate = $_
+        $userUpdate.roleids = @($targetRole.id)
+    
+        &"support\rest\sast\modifyuser.ps1" $session $_
+        $userCount++
+    }
+    
+    Write-Output "Successfully updated roles for $userCount users"
 }
-
-Write-Output "Successfully updated roles for $userCount users"
+else{
+    Write-Output "Role updater has been cancelled"
+}
