@@ -1,0 +1,115 @@
+server:
+  port: 8081
+logging:
+  file: 
+    name: flow.log
+  level:
+    com.checkmarx: TRACE
+
+cxflow:
+  bug-tracker: JIRA
+  bug-tracker-impl:
+    - JIRA
+  branches:
+  - master
+  filter-severity:
+  - High
+  - Medium
+  #filter-category:
+  # - SQL_Injection
+  # - Stored_XSS
+  # - Reflected_XSS_All_Clients
+  #filter-cwe:
+  filter-status:
+  # - Urgent
+   - Confirmed
+   - To Verify
+  mitre-url: https://cwe.mitre.org/data/definitions/%s.html
+  wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
+  codebash-url: https://checkmarx-demo.codebashing.com/courses/
+  enabled-vulnerability-scanners:
+  #  - sca
+    - sast
+
+checkmarx:
+  version: 9.3
+  username: admin
+  password: admin
+  client-id: resource_owner_client
+  client-secret: 014DF517-39D1-4453-B7B3-9930C563627C
+  scope: access_control_api sast_rest_api
+  base-url: http://workpc
+  #multi-tenant: true
+  configuration: Default Configuration
+  #scan-preset: Checkmarx Default
+  preserve-xml: true
+  team: /CxServer
+  url: ${checkmarx.base-url}/cxrestapi
+  #scan-preset: Checkmarx Default
+  #incremental: true
+  #WSDL Config
+  portal-url: ${checkmarx.base-url}/cxwebinterface/Portal/CxWebService.asmx
+  sdk-url: ${checkmarx.base-url}/cxwebinterface/SDK/CxSDKWebService.asmx
+  portal-wsdl: ${checkmarx.base-url}/Portal/CxWebService.asmx?wsdl
+  sdk-wsdl: ${checkmarx.base-url}/SDK/CxSDKWebService.asmx?wsdl
+
+github:
+  webhook-token: 12345
+  token: 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
+  #url: git@github.com:mgonzalezcx/JVL.git
+  api-url: https://api.github.com/repos/
+  false-positive-label: false-positive
+  #block-merge: true
+  #error-merge: true
+  #cx-summary: true
+
+#bitbucket:
+#  webhook-token: X3XpvnUPjaUA9qwrPtjZ
+#  token: mgonzalezleyva:KtKZHnMRVcH6C5eoKPM66BA3
+#  url: https://api.bitbucket.org/
+#  api-path: /2.0
+#  false-positive-label: false-positive
+
+#bitbucket:
+#  webhook-token: 12345
+#  token: admin:NDk5MTU5NTY0Njg0Osqg0BUzRnlm7A7MwQ7ucuYpDNIo
+#  url: http://localhost:7990
+#  api-url: /2.0
+#  false-positive-label: false-positive
+
+jira:
+  url: https://cxmgl.atlassian.net
+  username: mgonzalez.emailer@gmail.com
+  token: YdvvuAso4mIGeQ2XBavaE6FA
+  project: JVL
+  issue-type: Bug
+  priorities:
+    High: High
+    Medium: Medium
+    Low: Low
+    Informational: Lowest
+  open-transition: In Progress
+  close-transition: Done
+  open-status:
+    - To Do
+    - In Progress
+  closed-status:
+    - Done
+  fields:
+    - type: result
+      name: application
+      jira-field-name: Application
+      jira-field-type: label
+    - type: result
+      name: cwe
+      jira-field-name: CWEs
+      jira-field-type: label
+    - type: result
+      name: category
+      jira-field-name: Category
+      jira-field-type: label
+#    - type: result
+#      name: loc
+#      jira-field-name: LOC
+#      jira-field-type: label
+#      jira-default-value: XXXXX
