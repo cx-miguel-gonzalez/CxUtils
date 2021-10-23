@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory=$true)]
     [hashtable]$session,
     [Parameter(Mandatory=$true)]
-    [psobject]$samlMap,
+    [string]$samlMap,
     [Parameter(Mandatory=$true)]
     [string]$IdpId
 )
@@ -14,14 +14,14 @@ $request_url = New-Object System.Uri $session.base_url, $rest_url
 
 Write-Debug "SAML Group and Team Mapping API URL: $request_url"
 
-$Body = ConvertTo-Json $samlMap
-Write-Debug $Body
+#$Body = ConvertTo-Json $samlMap
+Write-Debug $samlMap
 
 $headers = GetRestHeadersForJsonRequest($session)
 Write-Debug $request_url
 
 try {
-    $response = Invoke-RestMethod -Method "PUT" -Uri $request_url -Headers $headers -ContentType "application/json" -Body $Body
+    $response = Invoke-RestMethod -Method "PUT" -Uri $request_url -Headers $headers -ContentType "application/json" -Body $samlMap
     return $response
 }
 catch {

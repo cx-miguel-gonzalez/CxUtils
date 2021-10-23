@@ -5,7 +5,7 @@ param(
 
 . "support/rest_util.ps1"
 
-$request_url = New-Object System.Uri $session.base_url, "/cxrestapi/auth//SamlIdentityProviders"
+$request_url = New-Object System.Uri $session.base_url, "/cxrestapi/auth/AuthenticationProviders"
 
 Write-Debug "Identity Providers API URL: $request_url"
 

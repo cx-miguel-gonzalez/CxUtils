@@ -24,10 +24,10 @@ setupDebug($dbg.IsPresent)
 $session = &"support/rest/sast/login.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
 
 # Validate the SAML IdP name
-$idps = &"support/rest/sast/getsamlproviders.ps1" $session
-$idpID = $idps | Where-Object{$_.Name -eq $samlIdP}
+$idps = &"support/rest/sast/getauthproviders.ps1" $session
+$idp = $idps | Where-Object{$_.Name -eq $samlIdP}
 
-if(!$idpID){
+if(!$idp){
     Throw "An Identitiy provider with the name: ${samlIdP} could not be found. Please provide a valid Identity Provider name"
 }
 # Gather list of teams
@@ -72,7 +72,7 @@ Import-Csv $csv_path | ForEach-Object {
     
     $samlmap += $mapping
 }
+$samlmap = ConvertTo-Json $samlmap
 
 #need to test the saml map and the nreat the role map
-Write-Output $samlmap
-&"support/rest/sast/putSamlTeamMap.ps1" $session $samlmap $idpID
+&"support/rest/sast/putSamlTeamMap.ps1" $session $samlmap $idp.Id
