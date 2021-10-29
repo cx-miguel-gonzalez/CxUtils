@@ -80,9 +80,9 @@ github:
 jira:
   url: https://cxmgl.atlassian.net
   username: mgonzalez.emailer@gmail.com
-  token: test
+  #token: test
   #token: YdvvuAso4mIGeQ2XBavaE6FA
-  #token: pl5r2wSKnNImK9pv5UW759D6
+  token: 4feBBMCogpXTZF8bkaBr39CC
   project: JVL
   issue-type: Bug
   priorities:

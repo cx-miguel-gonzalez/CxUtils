@@ -1,6 +1,8 @@
 # CxFlow Batch Processor
 This script will take an input of a project mapping csv and create tickets in batch mode for your Checkmarx projects. The project mapping will contain fields that will allow you to use different yml files to point to different Jira or bug tracker instances or you can also use environment variable to provide these values. 
 
+Currently the projectMap.csv is meant to be stored in a repository which will be placed in a config folder. The script will pull the latest version of the csv every time it is run.
+
 ## Environment Variables
 If you would like to use environment variables to provide the cxflow parameters, you will need to follow the format below. When using Environment Variables, all 3 environment variables need to be provided. *Please note this is all case sensivite*
 
@@ -11,6 +13,8 @@ Environment Variable | Variable Name Example | Value Example
 {Bug_Tracker}\_user\_{Bug_Tracker_Instance} | Jira_user_cxmgl, azure_user_CxAzure | user@email.com
 
 - Note the {Bug_Tracker} and {Bug_Tracker_Instance} need to match the values from your projectMap.csv file 
+
+## Project Map Contents
 
 Project Map Columns | Description
 --------------------|------------
