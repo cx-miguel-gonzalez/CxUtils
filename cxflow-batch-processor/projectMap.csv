@@ -1,3 +1,0 @@
-Checkmarx_Project,Checkmarx_Team,Jira_Project,Jira_Issue_Type,Config,
-nodegoat,/CxServer/Company/GroupA,nodegoat,,./cxflow.yml
-WebGoat,/CxServer/Company/GroupA/subTeam2,webgoat,,./cxflow.yml
