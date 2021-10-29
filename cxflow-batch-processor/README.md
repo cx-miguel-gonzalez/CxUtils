@@ -9,7 +9,6 @@ Environment Variable | Variable Name Example | Value Example
 {Bug_Tracker}_url_{Bug_Tracker_Instance} |  Jira_url_cxmgl, github_url_cloudInstance | https://api.github.com/repos/
 {Bug_Tracker}_token_{Bug_Tracker_Instance} | Jira_token_cxmgl, github_token_OnPrem | token1234
 ${Bug_Tracker}_user_${Bug_Tracker_Instance} | Jira_user_cxmgl, azure_user_CxAzure | user@email.com
---------------------|------------------------|---------------
 
 - Note the {Bug_Tracker} and {Bug_Tracker_Instance} need to match the values from your projectMap.csv file 
 
@@ -27,4 +26,5 @@ Namespace ** | Namespace for the repo/branch provided
 Config | the relative file path to the yml file that you want to use for cxflow
 
 "*" - Denotes this field is required if Bug_Tracker = Jira
+
 "**" - Denotes this field is required if Bug_Tracker = GitLab, GitHub, Azure
