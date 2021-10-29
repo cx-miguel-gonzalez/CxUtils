@@ -20,10 +20,10 @@ cxflow:
   # - Stored_XSS
   # - Reflected_XSS_All_Clients
   #filter-cwe:
-  filter-status:
+  #filter-status:
   # - Urgent
-   - Confirmed
-   - To Verify
+  # - Confirmed
+  # - To Verify
   mitre-url: https://cwe.mitre.org/data/definitions/%s.html
   wiki-url: https://custodela.atlassian.net/wiki/spaces/AS/pages/79462432/Remediation+Guidance
   codebash-url: https://checkmarx-demo.codebashing.com/courses/
@@ -80,7 +80,9 @@ github:
 jira:
   url: https://cxmgl.atlassian.net
   username: mgonzalez.emailer@gmail.com
-  token: YdvvuAso4mIGeQ2XBavaE6FA
+  token: test
+  #token: YdvvuAso4mIGeQ2XBavaE6FA
+  #token: pl5r2wSKnNImK9pv5UW759D6
   project: JVL
   issue-type: Bug
   priorities:
@@ -88,28 +90,22 @@ jira:
     Medium: Medium
     Low: Low
     Informational: Lowest
-  open-transition: In Progress
-  close-transition: Done
+  open-transition: ReOpen
+  close-transition: Close
   open-status:
-    - To Do
+    - Open
     - In Progress
   closed-status:
     - Done
   fields:
-    - type: result
-      name: application
-      jira-field-name: Application
-      jira-field-type: label
-    - type: result
-      name: cwe
-      jira-field-name: CWEs
-      jira-field-type: label
-    - type: result
-      name: category
-      jira-field-name: Category
-      jira-field-type: label
-#    - type: result
-#      name: loc
-#      jira-field-name: LOC
-#      jira-field-type: label
-#      jira-default-value: XXXXX
+    - type: static
+      name: Resolution
+      jira-field-name: Resolution
+      jira-field-type: single-select
+      jira-default-value: Done
+    - type: static
+      name: Affects versions
+      jira-field-name: Affects versions
+      jira-field-type: multi-version-picker
+      jira-default-value: 1.2
+
