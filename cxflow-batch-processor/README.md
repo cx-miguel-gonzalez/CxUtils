@@ -6,9 +6,9 @@ If you would like to use environment variables to provide the cxflow parameters,
 
 Environment Variable | Variable Name Example | Value Example
 ---------------------|-----------------------|--------------
-{Bug_Tracker}__url__{Bug_Tracker_Instance} |  Jira_url_cxmgl, github_url_cloudInstance | https://api.github.com/repos/
-{Bug_Tracker}__token__{Bug_Tracker_Instance} | Jira_token_cxmgl, github_token_OnPrem | token1234
-{Bug_Tracker}__user__{Bug_Tracker_Instance} | Jira_user_cxmgl, azure_user_CxAzure | user@email.com
+{Bug_Tracker}\_url\_{Bug_Tracker_Instance} |  Jira_url_cxmgl, github_url_cloudInstance | https://api.github.com/repos/
+{Bug_Tracker}\_token\_{Bug_Tracker_Instance} | Jira_token_cxmgl, github_token_OnPrem | token1234
+{Bug_Tracker}\_user\_{Bug_Tracker_Instance} | Jira_user_cxmgl, azure_user_CxAzure | user@email.com
 
 - Note the {Bug_Tracker} and {Bug_Tracker_Instance} need to match the values from your projectMap.csv file 
 
