@@ -1,0 +1,2 @@
+Checkmarx_Project,Checkmarx_Team,Bug_Tracker,Bug_Tracker_Instance,Jira_Project,Jira_Issue_Type,Repo_Name,Branch,Namespace,Config,
+nodegoat,/CxServer/Company/GroupA,jira,cxmgl,NODE,Bug,,,,./cxflow.yml,
