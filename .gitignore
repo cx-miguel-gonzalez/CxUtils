@@ -1,2 +1,5 @@
 
 cxflow-batch-processor/cxflow.yml
+config*
+cx-flow-1.6.25.jar
+flow.*
