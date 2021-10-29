@@ -2,7 +2,6 @@
 
 map="./config/projectMap.csv"
 cxflowjar="cx-flow-1.6.25.jar"
-#map_repo="https://github.com/mgonzalezcx/cxflowbatchmode.git"
 
 #get the projectMap from the repository.
 echo "cloning the repository"
@@ -10,6 +9,7 @@ echo "cloning the repository"
 if [[ ! -d "config" ]] 
 then
     mkdir config
+    #update this repository to point at the correct location
     git clone git@github.com:mgonzalezcx/cxflowbatchmode.git ./config && echo "Successfully cloned repository"
 else
     cd config
