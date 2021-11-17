@@ -1,7 +1,8 @@
 #make sure the map and cxflowjar variables are set with the names you have in your file structure
 
 map="./config/projectMap.csv"
-cxflowjar="cx-flow-1.6.25.jar"
+cxflowjar="cx-flow-1.6.26.jar"
+currDate=$(date + '%Y/%m/%d %R')
 
 #get the projectMap from the repository.
 echo "cloning the repository"
@@ -13,7 +14,7 @@ then
     git clone git@github.com:mgonzalezcx/cxflowbatchmode.git ./config && echo "Successfully cloned repository"
 else
     cd config
-    git pull && echo "Pulled latest version of the project map"
+    git pull main && echo "Pulled latest version of the project map"
     cd ..
 fi
 
@@ -43,22 +44,31 @@ while IFS==, read -r Checkmarx_Project Checkmarx_Team Bug_Tracker Bug_Tracker_In
         bug_tracker_token="${Bug_Tracker}_token_${Bug_Tracker_Instance}"
         bug_tracker_user="${Bug_Tracker}_user_${Bug_Tracker_Instance}"
         #add check to see if environment variables exist
-        if [[ ! -z $bug_tracker_url || ! -z $bug_tracker_token || ! -z $bug_tracker_user ]]
+        if [[ ! -z ${!bug_tracker_url} || ! -z ${!bug_tracker_token} || ! -z ${!bug_tracker_user} ]]
         then
         #use environment variables
+            echo "using env variables"
             echo "java -jar $cxflowjar --project --cx-team=$Checkmarx_Team --cx-project=$Checkmarx_Project --bug-tracker=$Bug_Tracker --bug-tracker-impl=$Bug_Tracker --app=$Jira_Project --jira.project=$Jira_Project --jira.issuetype=$Jira_Issue_Type --branch=$Branch --repo-name=$repo_Name --namespace=$Namespace --spring.config.location=$Config"
             nohup java -jar $cxflowjar --project --cx-team=$Checkmarx_Team --cx-project=$Checkmarx_Project --bug-tracker=$Bug_Tracker --bug-tracker-impl=$Bug_Tracker --app=$Jira_Project --jira.project=$Jira_Project --jira.issuetype=$Jira_Issue_Type --branch=$Branch --repo-name=$repo_Name --namespace=$Namespace --${Bug_Tracker}.url=${!bug_tracker_url} --${Bug_Tracker}.token=${!bug_tracker_token} --${Bug_Tracker}.username=${!bug_tracker_user} --spring.config.location=$Config > $filename
         else
         #pull everything from config
+            echo "using a config file"
             echo "java -jar $cxflowjar --project --cx-team=$Checkmarx_Team --cx-project=$Checkmarx_Project --bug-tracker=$Bug_Tracker --bug-tracker-impl=$Bug_Tracker --app=$Checkmarx_Project --jira.project=$Jira_Project --jira.issuetype=$Jira_Issue_Type --branch=$Branch --repo-name=$repo_Name --namespace=$Namespace --spring.config.location=$Config"
             nohup java -jar $cxflowjar --project --cx-team=$Checkmarx_Team --cx-project=$Checkmarx_Project --bug-tracker=$Bug_Tracker --bug-tracker-impl=$Bug_Tracker --app=$Checkmarx_Project --jira.project=$Jira_Project --jira.issuetype=$Jira_Issue_Type --branch=$Branch --repo-name=$repo_Name --namespace=$Namespace --spring.config.location=$Config > $filename
         fi
+    
+            #do some basic error handling
+        if grep -q ERROR $filename;
+        then
+            echo "$currDate Bug Tracking for $Checkmarx_Project has failed with the following errors" >> batchprocessorErrors.log
+            grep ERROR $filename >> batchprocessorErrors.log
+        fi
+
     fi
+
+
     ((++count))
 done < $map
 
 total=$(expr $count - 1)
-echo "Found {$total} entries in the projectMap. Completed all ticket creation jobs"
-
-
-
+echo "Found {$total} entries in the projectMap. Ticket creation jobs have completed"

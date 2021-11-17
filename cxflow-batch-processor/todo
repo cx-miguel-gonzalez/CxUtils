@@ -1,0 +1,4 @@
+-improve error handling - add notification when job fails to create tickets 
+- add an empty function for slack integration
+- figure out how to find if cxflow will fail to generate tickets 
+
