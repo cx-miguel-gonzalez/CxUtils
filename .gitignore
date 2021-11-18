@@ -3,3 +3,13 @@ cxflow-batch-processor/cxflow.yml
 config*
 cx-flow-1.6.25.jar
 flow.*
+
+cxflow-batch-processor/.DS_Store
+
+cxflow-batch-processor/batchprocessorErrors.log
+
+cxflow-batch-processor/cx-flow-1.6.26.jar
+
+*.log
+
+.DS_Store
