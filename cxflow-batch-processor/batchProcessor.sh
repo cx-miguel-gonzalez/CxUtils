@@ -1,8 +1,23 @@
 #make sure the map and cxflowjar variables are set with the names you have in your file structure
-
 map="./config/projectMap.csv"
 cxflowjar="cx-flow-1.6.26.jar"
-currDate=$(date + '%Y/%m/%d %R')
+currDate=$(date +'%F %H:%M%:%S')
+
+#Insert Slack information here or comment out if you are not using Slack
+SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
+SLACK_CHANNEL="cxflow"
+
+send_notification() {
+  local color='good'
+  if [ $1 == 'ERROR' ]; then
+    color='danger'
+  elif [ $1 == 'WARN' ]; then
+    color = 'warning'
+  fi
+  local message="payload={\"channel\": \"#$SLACK_CHANNEL\",\"attachments\":[{\"pretext\":\"$2\",\"text\":\"$3\",\"color\":\"$color\"}]}"
+
+  curl -X POST --data-urlencode "$message" ${SLACK_WEBHOOK_URL}
+}
 
 #get the projectMap from the repository.
 echo "cloning the repository"
@@ -37,8 +52,6 @@ while IFS==, read -r Checkmarx_Project Checkmarx_Team Bug_Tracker Bug_Tracker_In
         fi
     else
         filename="$Checkmarx_Project.log"
-        #if [[ $Bug_Tracker == "Jira" ]]
-        #then
         #grab the correct bug tracker credentials
         bug_tracker_url="${Bug_Tracker}_url_${Bug_Tracker_Instance}"
         bug_tracker_token="${Bug_Tracker}_token_${Bug_Tracker_Instance}"
@@ -57,11 +70,22 @@ while IFS==, read -r Checkmarx_Project Checkmarx_Team Bug_Tracker Bug_Tracker_In
             nohup java -jar $cxflowjar --project --cx-team=$Checkmarx_Team --cx-project=$Checkmarx_Project --bug-tracker=$Bug_Tracker --bug-tracker-impl=$Bug_Tracker --app=$Checkmarx_Project --jira.project=$Jira_Project --jira.issuetype=$Jira_Issue_Type --branch=$Branch --repo-name=$repo_Name --namespace=$Namespace --spring.config.location=$Config > $filename
         fi
     
-            #do some basic error handling
+        #do some basic error handling
         if grep -q ERROR $filename;
         then
             echo "$currDate Bug Tracking for $Checkmarx_Project has failed with the following errors" >> batchprocessorErrors.log
             grep ERROR $filename >> batchprocessorErrors.log
+
+            #send out slack notification
+            if [[ ! -z $SLACK_WEBHOOK_URL ]]
+            then
+            echo "Sending slack notification"
+            errmsg="$currDate Bug Tracking for $Checkmarx_Project has failed during processing."
+            send_notification 'ERROR' "Message Title" "$errmsg"
+            errdetails=$(grep ERROR $filename)
+            send_notification 'ERROR' "Message Title" "$errdetails"
+            fi
+
         fi
 
     fi
