@@ -4,9 +4,9 @@ cxflowjar="cx-flow-1.6.26.jar"
 currDate=$(date +'%F %H:%M%:%S')
 
 #Insert Slack information here or comment out if you are not using Slack
-SLACK_WEBHOOK_URL="https://hooks.slack.com/services/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"
+SLACK_WEBHOOK_URL="webhookUrlHERE"
 SLACK_CHANNEL="cxflow"
-
+#function that sends the slack notifications
 send_notification() {
   local color='good'
   if [ $1 == 'ERROR' ]; then
@@ -29,7 +29,7 @@ then
     git clone git@github.com:mgonzalezcx/cxflowbatchmode.git ./config && echo "Successfully cloned repository"
 else
     cd config
-    git pull main && echo "Pulled latest version of the project map"
+    git checkout main && git pull && echo "Pulled latest version of the project map"
     cd ..
 fi
 
