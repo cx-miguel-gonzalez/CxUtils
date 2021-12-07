@@ -29,7 +29,10 @@ $teams = &"support/rest/sast/teams.ps1" $session
 $projects = &"support/rest/sast/projects.ps1" $session
 $users = &"support/rest/sast/getusers.ps1" $session
 
-$cutOffDate = Get-Date($cutoff)
+$culture = [Globalization.CultureInfo]::InvariantCulture
+$pattern = "dd\/MM\/yyyy"
+$cutOffDate = [DateTime]::ParseExact($cutoff, $pattern, $culture)
+Write-Debug $cutOffDate
 #Get all users that belong to one of the teams/subteams
 $parentTeam = $teams | Where-Object {$_.Name -eq "$teamName"}
 if($parentTeam.count -eq 0){
