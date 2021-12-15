@@ -4,7 +4,7 @@ cxflowjar="cx-flow-1.6.26.jar"
 currDate=$(date +'%F %H:%M%:%S')
 
 #Insert Slack information here or comment out if you are not using Slack
-SLACK_WEBHOOK_URL="webhookUrlHERE"
+SLACK_WEBHOOK_URL="webhookURL"
 SLACK_CHANNEL="cxflow"
 #function that sends the slack notifications
 send_notification() {
@@ -19,6 +19,13 @@ send_notification() {
   curl -X POST --data-urlencode "$message" ${SLACK_WEBHOOK_URL}
 }
 
+#Send Start Notification
+if [[ ! -z $SLACK_WEBHOOK_URL ]]
+    currDate=$(date +'%F %H:%M%:%S')
+    msg="$currDate Batch Processor is starting"
+    send_notification 'good' "Message Title" "$msg"
+fi
+
 #get the projectMap from the repository.
 echo "cloning the repository"
 
@@ -26,7 +33,7 @@ if [[ ! -d "config" ]]
 then
     mkdir config
     #update this repository to point at the correct location
-    git clone git@github.com:mgonzalezcx/cxflowbatchmode.git ./config && echo "Successfully cloned repository"
+    git clone gitURL ./config && echo "Successfully cloned repository"
 else
     cd config
     git checkout main && git pull && echo "Pulled latest version of the project map"
@@ -52,7 +59,8 @@ while IFS==, read -r Checkmarx_Project Checkmarx_Team Bug_Tracker Bug_Tracker_In
         fi
     else
         filename="$Checkmarx_Project.log"
-        configPath="./config/$Config"
+        #configPath="./config/$Config"
+        configPath=$Config
         #grab the correct bug tracker credentials
         bug_tracker_url="${Bug_Tracker}_url_${Bug_Tracker_Instance}"
         bug_tracker_token="${Bug_Tracker}_token_${Bug_Tracker_Instance}"
@@ -97,3 +105,10 @@ done < $map
 
 total=$(expr $count - 1)
 echo "Found {$total} entries in the projectMap. Ticket creation jobs have completed"
+
+#Send Completion Notification
+if [[ ! -z $SLACK_WEBHOOK_URL ]]
+    currDate=$(date +'%F %H:%M%:%S')
+    msg="$currDate Batch Processor has completed"
+    send_notification 'good' "Message Title" "$msg"
+fi
