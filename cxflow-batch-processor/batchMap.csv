@@ -1,0 +1,4 @@
+Checkmarx Project,Checkmarx Team,Jira Project,Jira Issue,Yml File Name
+Gitlab_JVL,/CxServer,,,app.yml
+test,/CxServer,,,app.yml
+Demo-WebGoat-develop,/CxServer/Connect/Team1,,,app.yml
