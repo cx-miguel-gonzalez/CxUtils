@@ -55,7 +55,6 @@ $targetTeams | %{
             $scanDate = Get-Date($lastScan.dateAndTime.finishedOn)
     
             if($scanDate -lt $cutOffDate){
-                Write-Debug "going to delete dis"
                 $deleteProjects += $_
             }
         }
@@ -70,8 +69,9 @@ if($deleteProjects.count -eq 0){
     Exit
 }
 #Delete Projects
-Write-Output "The following projects will be deleted"
-Write-Output $deleteProjects.Name
+Write-Output "The projects that will be deleted can be found in the TargetProjects.csv file"
+#Write-Output $deleteProjects.Name
+$deleteProjects | Export-Csv -Path './TargetProject.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of projects to be affected: {0}", $deleteProjects.count)
 Write-Output $output
 $verification = Read-Host -Prompt "Are you sure you want to update all projects (y/n)"
@@ -109,8 +109,9 @@ $deleteTeams | %{
 }
 
 #Delete users first
-Write-Output "The following users will be deleted"
-Write-Output $deleteUsers.userName
+Write-Output "The users that will be deleted can be found in the ProjectDetails.csv file"
+#Write-Output $deleteUsers.userName
+$deleteUsers | Export-Csv -Path './TargetUsers.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of users to be affected: {0}", $deleteusers.count)
 Write-Output $output
 $verification = Read-Host -Prompt "Are you sure you want to delete all projects? (y/n)"
@@ -126,8 +127,9 @@ else{
 }
 
 #Delete all teams that have no projects
-Write-Output "The following teams will be deleted"
-Write-Output $deleteTeams.Name
+Write-Output "The teams that will be deleted can be found in the TargetTeams.csv file"
+#Write-Output $deleteTeams.Name
+$targetTeams | Export-Csv -Path './TargetTeams.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of teams to be affected: {0}", $deleteTeams.count)
 Write-Output $output
 $verification = Read-Host -Prompt "Are you sure you want to delete all teams? (y/n)"

@@ -43,6 +43,7 @@ $allProjects | %{
             projectGitBranch = $scmSettings.branch;
         })
         
+        
         Write-Debug $csvEntry
         $csvDetails +=$csvEntry
     }

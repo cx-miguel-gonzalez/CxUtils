@@ -1,0 +1,4 @@
+@echo off
+cd "C:\cx-sast-shell-tools"
+
+powershell -c "C:\cx-sast-shell-tools\SAST-batch-ticketing.ps1 >> C:\cx-sast-shell-tools\Logs\output.log 2>&1"
