@@ -109,7 +109,7 @@ $deleteTeams | %{
 }
 
 #Delete users first
-Write-Output "The users that will be deleted can be found in the ProjectDetails.csv file"
+Write-Output "The users that will be deleted can be found in the TargetUsers.csv file"
 #Write-Output $deleteUsers.userName
 $deleteUsers | Export-Csv -Path './TargetUsers.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of users to be affected: {0}", $deleteusers.count)
