@@ -42,6 +42,7 @@ if($parentTeam.count -eq 0){
 $targetTeams = $teams | Where-Object {$_.parentId -eq $parentTeam.id}
 
 $deleteProjects = @()
+$deleteProjectsCsv = @()    
 #Gather list of projects that will be deleted
 $targetTeams | %{
     $teamId = $_.id
@@ -56,6 +57,17 @@ $targetTeams | %{
     
             if($scanDate -lt $cutOffDate){
                 $deleteProjects += $_
+                $projectTeam = $_.teamId
+                $currTeam = $teams | Where-Object{$_.id -eq $projectTeam}
+
+                $targetProject = New-Object -TypeName psobject -Property ([Ordered]@{
+                    id = $_.id;
+                    teamName = $currTeam.fullName
+                    projectName = $_.name
+                    lastScanDate = $scanDate
+                })
+
+                $deleteProjectsCsv += $targetProject
             }
         }
         catch{
@@ -66,29 +78,32 @@ $targetTeams | %{
 
 if($deleteProjects.count -eq 0){
     Write-Output "No projects found to be deleted under parent team $TeamName"
-    Exit
-}
-#Delete Projects
-Write-Output "The projects that will be deleted can be found in the TargetProjects.csv file"
-#Write-Output $deleteProjects.Name
-$deleteProjects | Export-Csv -Path './TargetProject.csv' -Delimiter ',' -Append -NoTypeInformation
-$output = [string]::Format("Totoal number of projects to be affected: {0}", $deleteProjects.count)
-Write-Output $output
-$verification = Read-Host -Prompt "Are you sure you want to update all projects (y/n)"
-
-if($verification -eq "y"){
-    $deleteProjects | %{
-        &"support/rest/sast/deleteproject.ps1" $session $_.id
-    }
 }
 else{
-    Write-Output "Process aborted"
-    Exit
+
+    #Delete Projects
+    Write-Output "The projects that will be deleted can be found in the TargetProjects.csv file"
+    
+    $deleteProjectsCsv | Export-Csv -Path './TargetProject.csv' -Delimiter ',' -Append -NoTypeInformation
+    $output = [string]::Format("Totoal number of projects to be affected: {0}", $deleteProjects.count)
+    Write-Output $output
+    $verification = Read-Host -Prompt "Are you sure you want to update all projects (y/n)"
+    
+    if($verification -eq "y"){
+        $deleteProjects | %{
+            &"support/rest/sast/deleteproject.ps1" $session $_.id
+        }
+    }
+    else{
+        Write-Output "Process aborted"
+        Exit
+    }
 }
 
 #Find all Teams that will be targeted for deletion
 $projects = &"support/rest/sast/projects.ps1" $session
 $deleteTeams=@();
+$targetTeamsCsv = @();
 
 $targetTeams | %{
     $teamId = $_.id
@@ -96,25 +111,42 @@ $targetTeams | %{
     
     if($targetProjects.count -lt 1){
         $deleteTeams += $_
+
+        $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
+            id = $_.id;
+            name = $_.name
+            fullName = $_.fullName
+        })
+        $targetTeamsCsv += $csvEntry
     }
 }
 
 #Find all users that will be deleted
 $oneTeamUsers = $users | Where-Object {$_.teamIds.count -eq 1}
 $deleteUsers = @()
+$deleteUsersCsv = @()
 
 $deleteTeams | %{
     $teamId = $_.id
     $deleteUsers += $oneTeamUsers | Where-Object{$_.teamIds -eq $teamId}
+
+    $deleteUser = New-Object -TypeName psobject -Property ([Ordered]@{
+        id = $_.id;
+        username = $_.username
+        FirstName = $_.firstName
+        lastName = $_.lastName
+    })
+
+    $deleteUsersCsv += $deleteUser
 }
 
 #Delete users first
 Write-Output "The users that will be deleted can be found in the TargetUsers.csv file"
-#Write-Output $deleteUsers.userName
-$deleteUsers | Export-Csv -Path './TargetUsers.csv' -Delimiter ',' -Append -NoTypeInformation
+
+$deleteUsersCsv | Export-Csv -Path './TargetUsers.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of users to be affected: {0}", $deleteusers.count)
 Write-Output $output
-$verification = Read-Host -Prompt "Are you sure you want to delete all projects? (y/n)"
+$verification = Read-Host -Prompt "Are you sure you want to delete all users? (y/n)"
 
 if($verification -eq "y"){
     $deleteUsers | %{
@@ -128,8 +160,8 @@ else{
 
 #Delete all teams that have no projects
 Write-Output "The teams that will be deleted can be found in the TargetTeams.csv file"
-#Write-Output $deleteTeams.Name
-$targetTeams | Export-Csv -Path './TargetTeams.csv' -Delimiter ',' -Append -NoTypeInformation
+
+$targetTeamsCsv | Export-Csv -Path './TargetTeams.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of teams to be affected: {0}", $deleteTeams.count)
 Write-Output $output
 $verification = Read-Host -Prompt "Are you sure you want to delete all teams? (y/n)"
