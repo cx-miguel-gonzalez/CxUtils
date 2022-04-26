@@ -91,7 +91,14 @@ else{
     
     if($verification -eq "y"){
         $deleteProjects | %{
-            &"support/rest/sast/deleteproject.ps1" $session $_.id
+            try{
+                &"support/rest/sast/deleteproject.ps1" $session $_.id
+            }
+            catch{
+                Write-Output "There was an error with the following project: $_"
+                Write-Output "Process aborted. Please review the error and correct before running."
+                Exit
+            }
         }
     }
     else{
@@ -130,13 +137,17 @@ $deleteTeams | %{
     $teamId = $_.id
     $deleteUsers += $oneTeamUsers | Where-Object{$_.teamIds -eq $teamId}
 
+}
+
+#loop through users that only belong to one team and delete them
+$deleteUsers | %{
     $deleteUser = New-Object -TypeName psobject -Property ([Ordered]@{
         id = $_.id;
         username = $_.username
         FirstName = $_.firstName
         lastName = $_.lastName
     })
-
+    
     $deleteUsersCsv += $deleteUser
 }
 
@@ -150,7 +161,14 @@ $verification = Read-Host -Prompt "Are you sure you want to delete all users? (y
 
 if($verification -eq "y"){
     $deleteUsers | %{
-        &"support/rest/sast/deleteuser.ps1" $session $_.id
+        try{
+            &"support/rest/sast/deleteuser.ps1" $session $_.id
+        }
+        catch{
+            Write-Output "There was an error with the following user: $_"
+            Write-Output "Process aborted. Please review the error and correct before running."
+            Exit
+        }
     }
 }
 else{
@@ -168,7 +186,14 @@ $verification = Read-Host -Prompt "Are you sure you want to delete all teams? (y
 
 if($verification -eq "y"){
     $deleteTeams | %{
-        &"support/rest/sast/deleteTeam.ps1" $session $_.id
+        try{
+            &"support/rest/sast/deleteTeam.ps1" $session $_.id
+        }
+        catch{
+            Write-Output "There was an error with the following team: $_"
+            Write-Output "Process aborted. Please review the error and correct before running."
+            Exit
+        }
     }
 }
 else{
@@ -179,8 +204,8 @@ else{
 #Summary
 $output = [string]::Format("Totoal number of projects to deleted: {0}", $deleteProjects.count)
 Write-Output $output
-$output = [string]::Format("Totoal number of teams deleted: {0}", $deleteTeams.count)
-Write-Output $output
 $output = [string]::Format("Totoal number of users deleted: {0}", $deleteusers.count)
+Write-Output $output
+$output = [string]::Format("Totoal number of teams deleted: {0}", $deleteTeams.count)
 Write-Output $output
 Write-Output "Clean up completed successfully"
