@@ -3,7 +3,7 @@ param(
     [System.Uri]$sast_url,
     [String]$username,
     [String]$password,
-    [String]$privateKey,
+    [String]$pat,
     [String]$urlFilter,
     [Switch]$dbg
 )
@@ -31,15 +31,17 @@ $failedUpdates = @()
 $projects | %{
     $prjId = $_.id
     $currProject = $_
-
+    Write-Output $_.Name
     try{
         $scmSettings = &"support/rest/sast/getprojectgitdetails.ps1" $session $_.id
+        
+        $newGitUrl = $scmSettings.url.substring(0,8) + $pat + "@" + $scmSettings.url.substring($scmSettings.url.length-($scmSettings.url.length-8))
 
         $gitSettings = @{
-            url = $scmSettings.url;
+            url = $newGitUrl;
             branch = $scmSettings.branch;
-            privateKey = $privateKey;
         }
+        Write-Debug $newGitUrl
 
         if($scmSettings.url -like "*$urlFilter*"){
             try{
@@ -47,7 +49,7 @@ $projects | %{
                 $projectsUpdated += $currProject
             }
             catch{
-                Write-Debug "Failed to update this project $_"
+                Write-Debug "This project does not meet update requirements $_"
                 $failedUpdates += $currProject
             }
         }
@@ -59,7 +61,13 @@ $projects | %{
 }
 
 #Print out the results
-$projectsUpdated | Export-Csv -Path './UpdatedProjectDetails.csv' -Delimiter ',' -Append -NoTypeInformation
+if($projectsUpdated.count -gt 0){
+    $projectsUpdated | Export-Csv -Path './UpdatedProjectDetails.csv' -Delimiter ',' -Append -NoTypeInformation
+}
+else{
+    Write-Output "No projects were updated"
+}
+
 if($failedUpdates.count -gt 0){
     $failedUpdates | Export-Csv -Path './FailedProjectDetails.csv' -Delimiter ',' -Append -NoTypeInformation
 }

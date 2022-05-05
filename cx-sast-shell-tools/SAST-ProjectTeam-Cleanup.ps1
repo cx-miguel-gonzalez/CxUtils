@@ -48,7 +48,12 @@ $targetTeams | %{
     $teamId = $_.id
     $targetProjects = $projects | Where-Object {$_.teamId -eq $teamId}
     
+    
     $targetProjects | %{
+        $currProject = $_
+        $projectTeam = $_.teamId
+        $currTeam = $teams | Where-Object{$_.id -eq $projectTeam}
+
         try{
             $lastScan = &"support/rest/sast/scans.ps1" $session $_.id
 
@@ -57,9 +62,7 @@ $targetTeams | %{
     
             if($scanDate -lt $cutOffDate){
                 $deleteProjects += $_
-                $projectTeam = $_.teamId
-                $currTeam = $teams | Where-Object{$_.id -eq $projectTeam}
-
+                
                 $targetProject = New-Object -TypeName psobject -Property ([Ordered]@{
                     id = $_.id;
                     teamName = $currTeam.fullName
@@ -71,7 +74,18 @@ $targetTeams | %{
             }
         }
         catch{
-            Write-Debug "No scans for this project. Don't delete this one"
+            #Delete any projects that do not have any scans
+            Write-Debug "No scans for this project. Delete this one too"
+            $deleteProjects += $currProject
+
+            $targetProject = New-Object -TypeName psobject -Property ([Ordered]@{
+                id = $currProject.id;
+                teamName = $currTeam.fullName
+                projectName = $currProject.name
+                lastScanDate = "No scans for this project"
+            })
+            
+            $deleteProjectsCsv += $targetProject
         }
     }
 }
@@ -84,7 +98,7 @@ else{
     #Delete Projects
     Write-Output "The projects that will be deleted can be found in the TargetProjects.csv file"
     
-    $deleteProjectsCsv | Export-Csv -Path './TargetProject.csv' -Delimiter ',' -Append -NoTypeInformation
+    $deleteProjectsCsv | Export-Csv -Path './TargetProjects.csv' -Delimiter ',' -Append -NoTypeInformation
     $output = [string]::Format("Totoal number of projects to be affected: {0}", $deleteProjects.count)
     Write-Output $output
     $verification = Read-Host -Prompt "Are you sure you want to update all projects (y/n)"
@@ -108,15 +122,16 @@ else{
 }
 
 #Find all Teams that will be targeted for deletion
-$projects = &"support/rest/sast/projects.ps1" $session
+#$projects = &"support/rest/sast/projects.ps1" $session
 $deleteTeams=@();
 $targetTeamsCsv = @();
 
 $targetTeams | %{
     $teamId = $_.id
+    
     $targetProjects = $projects | Where-Object {$_.teamId -eq $teamId}
     
-    if($targetProjects.count -lt 1){
+    if($targetProjects.count -eq 0){
         $deleteTeams += $_
 
         $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
