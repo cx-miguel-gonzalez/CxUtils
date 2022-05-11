@@ -30,7 +30,7 @@ $projects = &"support/rest/sast/projects.ps1" $session
 $users = &"support/rest/sast/getusers.ps1" $session
 
 $culture = [Globalization.CultureInfo]::InvariantCulture
-$pattern = "dd\/MM\/yyyy"
+$pattern = "MM\/dd\/yyyy"
 $cutOffDate = [DateTime]::ParseExact($cutoff, $pattern, $culture)
 Write-Debug $cutOffDate
 #Get all users that belong to one of the teams/subteams
@@ -101,24 +101,6 @@ else{
     $deleteProjectsCsv | Export-Csv -Path './TargetProjects.csv' -Delimiter ',' -Append -NoTypeInformation
     $output = [string]::Format("Totoal number of projects to be affected: {0}", $deleteProjects.count)
     Write-Output $output
-    $verification = Read-Host -Prompt "Are you sure you want to update all projects (y/n)"
-    
-    if($verification -eq "y"){
-        $deleteProjects | %{
-            try{
-                &"support/rest/sast/deleteproject.ps1" $session $_.id
-            }
-            catch{
-                Write-Output "There was an error with the following project: $_"
-                Write-Output "Process aborted. Please review the error and correct before running."
-                Exit
-            }
-        }
-    }
-    else{
-        Write-Output "Process aborted"
-        Exit
-    }
 }
 
 #Find all Teams that will be targeted for deletion
@@ -172,9 +154,27 @@ Write-Output "The users that will be deleted can be found in the TargetUsers.csv
 $deleteUsersCsv | Export-Csv -Path './TargetUsers.csv' -Delimiter ',' -Append -NoTypeInformation
 $output = [string]::Format("Totoal number of users to be affected: {0}", $deleteusers.count)
 Write-Output $output
-$verification = Read-Host -Prompt "Are you sure you want to delete all users? (y/n)"
+
+#Delete all teams that have no projects
+Write-Output "The teams that will be deleted can be found in the TargetTeams.csv file"
+
+$targetTeamsCsv | Export-Csv -Path './TargetTeams.csv' -Delimiter ',' -Append -NoTypeInformation
+$output = [string]::Format("Totoal number of teams to be affected: {0}", $deleteTeams.count)
+#Write-Output $output
+$verification = Read-Host -Prompt "Are you sure you want to delete all projects, users, and teams? (y/n)"
 
 if($verification -eq "y"){
+    $deleteProjects | %{
+        try{
+            &"support/rest/sast/deleteproject.ps1" $session $_.id
+        }
+        catch{
+            Write-Output "There was an error with the following project: $_"
+            Write-Output "Process aborted. Please review the error and correct before running."
+            Exit
+        }
+    }
+
     $deleteUsers | %{
         try{
             &"support/rest/sast/deleteuser.ps1" $session $_.id
@@ -185,21 +185,7 @@ if($verification -eq "y"){
             Exit
         }
     }
-}
-else{
-    Write-Output "Process aborted"
-    Exit
-}
 
-#Delete all teams that have no projects
-Write-Output "The teams that will be deleted can be found in the TargetTeams.csv file"
-
-$targetTeamsCsv | Export-Csv -Path './TargetTeams.csv' -Delimiter ',' -Append -NoTypeInformation
-$output = [string]::Format("Totoal number of teams to be affected: {0}", $deleteTeams.count)
-Write-Output $output
-$verification = Read-Host -Prompt "Are you sure you want to delete all teams? (y/n)"
-
-if($verification -eq "y"){
     $deleteTeams | %{
         try{
             &"support/rest/sast/deleteTeam.ps1" $session $_.id
