@@ -3,6 +3,7 @@ param(
     [System.Uri]$sast_url,
     [String]$username,
     [String]$password,
+#    [String]$csvFile,
     [String]$sshKey,
     [String]$sshKeyFile,
     [String]$projectNameFilter,
@@ -32,10 +33,9 @@ if ($sshKeyFile) {
     $sshKey = Get-Content -Path $sshKeyFilePath -Raw
 }
 
-if (!$sshKey) {
-    Write-Output "SSH key was empty."
-    exit 1
-}
+#$inputFilePath = (Get-Item -Path $csvFile).FullName
+#Write-Output "Reading project information from $inputFilePath"
+#$projectInfo = Import-CSV -Path $inputFilePath
 
 #Login and generate token
 $session = &"support/rest/sast/login.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
@@ -45,38 +45,45 @@ $projects = &"support/rest/sast/projects.ps1" $session
 $projectsUpdated = @()
 $failedUpdates = @()
 
-#Gather list of projects that will be deleted
-$projects | %{
-    $prjId = $_.id
-    $currProject = $_
-    try{
-        $scmSettings = &"support/rest/sast/getprojectgitdetails.ps1" $session $_.id
-        
-        $gitSettings = @{
-            url = $scmSettings.url;
-            branch = $scmSettings.branch;
-            privateKey = $sshKey
-        }
+#$projectInfo | ForEach {
+    $projects | %{
+        $prjId = $_.id
+        $currProject = $_
+        try{
+            $scmSettings = &"support/rest/sast/getprojectgitdetails.ps1" $session $_.id
+            
+            $gitSettings = @{
+                url = $scmSettings.url;
+                branch = $scmSettings.branch;
+                privateKey = $sshKey
+            }
 
-        if($currProject.Name -like "*$projectNameFilter*"){
-            try{
-                # Execute API if not in dry-run mode
-                if ($exec.IsPresent) {
-                    &"support/rest/sast/updateProjectGitSettings.ps1" $session $prjId $gitSettings
+            if($currProject.Name -like "*$projectNameFilter*"){
+                try{
+                    if (!$sshKey) {
+                        Write-Output "SSH key was empty."
+                        $failedUpdates += $currProject.Name
+                        continue
+                    }
+                    # Execute API if not in dry-run mode
+                    if ($exec.IsPresent) {
+                        &"support/rest/sast/updateProjectGitSettings.ps1" $session $prjId $gitSettings
+                    }
+                    $projectsUpdated += $currProject.Name
                 }
-                $projectsUpdated += $currProject.Name
+                catch{
+                    Write-Debug "This project does not meet update requirements $_"
+                    $failedUpdates += $currProject.Name
+                }
             }
-            catch{
-                Write-Debug "This project does not meet update requirements $_"
-                $failedUpdates += $currProject.Name
-            }
-        }
 
+        }
+        catch{
+            Write-Debug "This project does not have git settings"
+            $failedUpdates += $currProject.Name
+        }
     }
-    catch{
-        Write-Debug "This project does not have git settings"
-    }
-}
+#}
 
 #Print out the results
 if($projectsUpdated.count -gt 0){
