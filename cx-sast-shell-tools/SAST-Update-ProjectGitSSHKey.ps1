@@ -7,6 +7,8 @@ param(
     [String]$sshKey,
     [String]$sshKeyFile,
     [String]$projectNameFilter,
+    [String]$httpUrlPrefix,
+    [String]$sshUrlPrefix,
     [Switch]$exec,
     [Switch]$dbg
 )
@@ -52,8 +54,11 @@ $failedUpdates = @()
         try{
             $scmSettings = &"support/rest/sast/getprojectgitdetails.ps1" $session $_.id
             
+            $updatedUrl = $scmSettings.url.replace($httpUrlPrefix, $sshUrlPrefix)
+            Write-Debug "Updated repository URL to $updatedUrl"
+
             $gitSettings = @{
-                url = $scmSettings.url;
+                url = $updatedUrl
                 branch = $scmSettings.branch;
                 privateKey = $sshKey
             }
