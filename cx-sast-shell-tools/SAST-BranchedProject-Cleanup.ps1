@@ -65,6 +65,20 @@ $branchedProjects | %{
                     Branch = "None"
                 }
             }
+            $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
+                projectId = $prjId;
+                projectName = $prjName;
+                lastScanDate = $scanDate
+                owningTeam = $prjTeam.Name;
+                projectUrl = $scmSettings.url;
+                projectGitBranch = $scmSettings.branch;
+                parentProject = $parentProject.Name
+                parentTeam = $parentTeam.Name
+            })
+            
+            
+            #Write-Debug $csvEntry
+            $targetProjects +=$csvEntry
         }
     }
     catch {
@@ -74,24 +88,22 @@ $branchedProjects | %{
             branch = "None"
         }
         $scanDate = "Never Scanned"
-    }
-    
-    
-    $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
-        projectId = $prjId;
-        projectName = $prjName;
-        lastScanDate = $scanDate
-        owningTeam = $prjTeam.Name;
-        projectUrl = $scmSettings.url;
-        projectGitBranch = $scmSettings.branch;
-        parentProject = $parentProject.Name
-        parentTeam = $parentTeam.Name
-    })
-    
-    
-    #Write-Debug $csvEntry
-    $targetProjects +=$csvEntry
-       
+
+        $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
+            projectId = $prjId;
+            projectName = $prjName;
+            lastScanDate = $scanDate
+            owningTeam = $prjTeam.Name;
+            projectUrl = $scmSettings.url;
+            projectGitBranch = $scmSettings.branch;
+            parentProject = $parentProject.Name
+            parentTeam = $parentTeam.Name
+        })
+        
+        
+        #Write-Debug $csvEntry
+        $targetProjects +=$csvEntry
+    }  
 }
 
 $targetProjects | Export-Csv -Path './TargetBranchedProjectDetails.csv' -Delimiter ',' -Append -NoTypeInformation

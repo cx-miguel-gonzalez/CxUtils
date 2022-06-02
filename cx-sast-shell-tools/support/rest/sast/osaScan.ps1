@@ -7,7 +7,7 @@ param(
 
 . "support/rest_util.ps1"
 
-$request_url = New-Object System.Uri $session.base_url, "/cxrestapi/sast/scanWithSettings"
+$request_url = New-Object System.Uri $session.base_url, "/cxrestapi/osa/scans"
 $request_url = New-Object System.UriBuilder $request_url
 
 Write-Debug "Scans API URL: $request_url"

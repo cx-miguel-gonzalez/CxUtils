@@ -3,6 +3,8 @@ param(
     [System.Uri]$sast_url,
     [String]$username,
     [String]$password,
+    [String]$zipLocation,
+    [string]$projectName,
     [Switch]$dbg
 )
 
@@ -18,9 +20,14 @@ setupDebug($dbg.IsPresent)
 
 #Login and generate token
 $session = &"support/rest/sast/login.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
-$zipLocation = "C:\Users\MiguelG\Downloads\JVL-master.zip"
+
+$projects = &"support/rest/sast/projects.ps1" $session
+
+$targetProject = $projects | where-object {$_.Name -eq $projectName}
 
 
-&"support/rest/sast/scanWithSettings.ps1" $session $scanData "13" $zipLocation
+$sastScanId = &"support/rest/sast/scanWithSettings.ps1" $session $targetProject.Id $zipLocation
+$osaScanId = &"support/rest/sast/osaScan.ps1" $session $targetProject.id $zipLocation
 
-Write-Output "Ta da"
+write-output "Sast scan ID " $sastScanId
+write-output "Osa scan ID " $osaScanId
