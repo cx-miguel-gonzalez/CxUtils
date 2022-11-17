@@ -35,8 +35,10 @@ if(!$fullTeamName){
 else{
     $targetTeamId = $teams | Where-Object {$_.fullName -eq $fullTeamName}
     $targetProjects = $allprojects | Where-Object {$_.teamID -eq $targetTeamId.id}
-    Write-Output $targetProjects
+    #Write-Output $targetProjects
 }
+#Write-Output $targetProjects.id
+#exit
 #build list of project information and scm configuration
 $targetProjects | %{
     $prjId = $_.id
@@ -52,7 +54,6 @@ $targetProjects | %{
         $projectgitBranch = $scmSettings.branch;
         
         Write-Debug $csvEntry
-        $csvDetails +=$csvEntry
     }
     catch{
         Write-Debug "This project: $prjName , does not have git configuration"
@@ -66,7 +67,19 @@ $targetProjects | %{
     $engineConfig = $allEngineConfigurations | Where-Object {$_.id -eq $projectSettings.engineConfiguration.id}
 
     #Get last scan data
-    $lastScan = &"support/rest/sast/scans.ps1" $session $prjId
+    try {
+        $lastScan = &"support/rest/sast/scans.ps1" $session $prjId
+    }
+    catch {
+        Write-Debug "This project has no scans"
+        $lastScan = @{
+            origin = "NONE";
+            dateAndTime = @{
+                finishedOn = "NONE"
+            }
+        }
+    }
+    
 
     $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
         SAST_ProjectId = $prjId;
@@ -75,7 +88,7 @@ $targetProjects | %{
         SAST_ProjectUrl = $projectUrl;
         SAST_ProjectGitBranch = $projectGitBranch;
         SAST_Preset = $preset.name;
-        SAST_Last_Scan_Date = $lastScan.dateAndTime.finishedOn;
+        SAST_Last_Scan_Date = $lastScan.dateAndTime.finishecleardOn;
         SAST_ScanOrigin = $lastScan.origin;
         SAST_Engine_Configuration = $engineConfig.name;
         Cx1_ProjectId= '';
@@ -85,11 +98,9 @@ $targetProjects | %{
         Cx1_EnabledScanners = '';
         Cx1_Groups = '';
     })
-
-    $csvDetails += $csvEntry
     
+    $csvDetails += $csvEntry
 }
 
-Write-Output $csvDetails
 $csvDetails | Export-Csv -Path './SAST_CX1_Map.csv' -Delimiter ',' -Append -NoTypeInformation
 

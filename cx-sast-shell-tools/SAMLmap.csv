@@ -1,5 +1,0 @@
-SAMLGroupName,SAMLGroupID,SASTteam
-ACL,1,/CxServer
-ACL,2,/CxServer/Company
-ACL,3,/CxServer/Company/GroupA
-ACL,4,/CxServer/Company/GroupB
