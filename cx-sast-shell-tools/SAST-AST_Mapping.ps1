@@ -79,7 +79,6 @@ $targetProjects | %{
             }
         }
     }
-    
 
     $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
         SAST_ProjectId = $prjId;
@@ -88,7 +87,7 @@ $targetProjects | %{
         SAST_ProjectUrl = $projectUrl;
         SAST_ProjectGitBranch = $projectGitBranch;
         SAST_Preset = $preset.name;
-        SAST_Last_Scan_Date = $lastScan.dateAndTime.finishecleardOn;
+        SAST_Last_Scan_Date = $lastScan.dateAndTime.finishedOn;
         SAST_ScanOrigin = $lastScan.origin;
         SAST_Engine_Configuration = $engineConfig.name;
         Cx1_ProjectId= '';
