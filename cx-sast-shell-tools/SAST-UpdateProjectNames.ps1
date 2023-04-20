@@ -45,16 +45,15 @@ $targetTeams |%{
     $targetProjects | %{
         $projectName = $_.name
         $owningTeam = $_.teamId
-        if($_.name.contains("MGL")){
-            $newProjectName = "$teamName-$projectName"
-            $projectBody = @{
-                name = $newProjectName;
-                owningTeam = $owningTeam
-            }
-
-            $result = &"support/rest/sast/updateProject.ps1" $session $_.id $projectBody
-            Write-Output $result
+    
+        $newProjectName = "$teamName-$projectName"
+        $projectBody = @{
+            name = $newProjectName;
+            owningTeam = $owningTeam
         }
+
+        $result = &"support/rest/sast/updateProject.ps1" $session $_.id $projectBody
+        Write-Output $result
     }
 
 }
