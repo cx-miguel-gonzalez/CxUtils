@@ -21,7 +21,7 @@ setupDebug($dbg.IsPresent)
 $session = &"support/rest/sast/loginV2.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
 
 #Get the list of projects that have git configured for source control
-$allprojects = &"support/rest/sast/projects.ps1" $session
+$allprojects = &"support/rest/sast/projects.ps1" $session "2.2"
 $teams = &"support/rest/sast/teams.ps1" $session
 $allpresets = &"support/rest/sast/getpresets.ps1" $session
 $allEngineConfigurations = &"support/rest/sast/getEngineConfigurations.ps1" $session
@@ -65,7 +65,18 @@ $targetProjects | %{
     $projectSettings = &"support/rest/sast/getProjectSettings.ps1" $session $prjId
     $preset = $allpresets | Where-Object {$_.id -eq $projectSettings.preset.id}
     $engineConfig = $allEngineConfigurations | Where-Object {$_.id -eq $projectSettings.engineConfiguration.id}
-
+    #get exclusions if any
+    try{
+        $projectExclusions = &"support/rest/sast/getprojectexclusions.ps1" $session $prjId
+        $folderExclusions = $projectExclusions.excludeFoldersPattern
+        $fileExclusions = $projectExclusions.excludeFilesPattern
+    }
+    catch{
+        Write-Debug "This project has no exclusions settings"
+        
+        $folderExclusions = "N/A"
+        $fileExclusions = "N/A"
+    }
     #Get last scan data
     try {
         $lastScan = &"support/rest/sast/scans.ps1" $session $prjId
@@ -82,20 +93,23 @@ $targetProjects | %{
 
     $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
         SAST_ProjectId = $prjId;
+        SAST_IsBranched = $_.isBranched;
         SAST_ProjectName = $prjName;
         SAST_OwningTeam = $prjTeam.fullName;
         SAST_ProjectUrl = $projectUrl;
         SAST_ProjectGitBranch = $projectGitBranch;
+        SAST_FolderExclusions = $folderExclusions;
+        SAST_FileExclusions = $fileExclusions;
         SAST_Preset = $preset.name;
         SAST_Last_Scan_Date = $lastScan.dateAndTime.finishedOn;
         SAST_ScanOrigin = $lastScan.origin;
         SAST_Engine_Configuration = $engineConfig.name;
         Cx1_ProjectId= '';
-        Cx1_ProjectName = '';
-        Cx1_AppName = '';
-        Cx1_PresetName = '';
-        Cx1_EnabledScanners = '';
-        Cx1_Groups = '';
+        Cx1_ProjectName = "$prjName";
+        Cx1_Tags = '';
+        Cx1_PresetName = $preset.name;
+        Cx1_EnabledScanners = 'SAST,SCA';
+        Cx1_Groups = $prjTeam.Name;
     })
     
     $csvDetails += $csvEntry
