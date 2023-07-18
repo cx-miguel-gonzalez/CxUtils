@@ -101,6 +101,7 @@ $targetProjects | %{
         SAST_FolderExclusions = $folderExclusions;
         SAST_FileExclusions = $fileExclusions;
         SAST_Preset = $preset.name;
+        SAST_Last_Scan_Id = $lastScan.id
         SAST_Last_Scan_Date = $lastScan.dateAndTime.finishedOn;
         SAST_ScanOrigin = $lastScan.origin;
         SAST_Engine_Configuration = $engineConfig.name;
