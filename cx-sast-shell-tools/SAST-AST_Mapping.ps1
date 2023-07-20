@@ -70,6 +70,8 @@ $targetProjects | %{
         $projectExclusions = &"support/rest/sast/getprojectexclusions.ps1" $session $prjId
         $folderExclusions = $projectExclusions.excludeFoldersPattern
         $fileExclusions = $projectExclusions.excludeFilesPattern
+        Write-Debug $folderExclusions
+        write-debug $fileExclusions
     }
     catch{
         Write-Debug "This project has no exclusions settings"
