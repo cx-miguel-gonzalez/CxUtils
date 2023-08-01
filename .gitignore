@@ -11,5 +11,12 @@ cxflow-batch-processor/batchprocessorErrors.log
 cxflow-batch-processor/cx-flow-1.6.26.jar
 
 *.log
+*.zip
 
 .DS_Store
+cx-sast-shell-tools/ProjectNameDuplicates.csv
+cx-sast-shell-tools/ProjectState.csv
+.gitignore
+cx-sast-shell-tools/SAST_CX1_MapTest.csv
+cx-sast-shell-tools/SAST_CX1_Map.csv
+cx-sast-shell-tools/SAST_CX1_Map.csv
