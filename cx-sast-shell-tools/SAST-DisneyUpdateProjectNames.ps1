@@ -43,19 +43,29 @@ $targetTeams |%{
     $targetProjects = $projects | Where-Object {$_.teamId -eq $teamId -and $_.name.contains("MGL")}
 
     $targetProjects | %{
-        $projectName = $_.name
+        $projectId = $_.Id
         $owningTeam = $_.teamId
         
-        $stringTest = $projectName.Substring($projectName.LastIndexOf('-'))
-        Write-Output $stringTest
-        $newProjectName = "$teamName-$projectName"
-        $projectBody = @{
-            name = $newProjectName;
-            owningTeam = $owningTeam
+        try{
+            $gitDetails = &"support/rest/sast/getprojectgitdetails.ps1" $session $projectId
+        
+            #create the new project Name
+            $repoName = $gitDetails.url.Substring($gitDetails.url.LastIndexOf('/')+1)
+            $repoBranch = $gitDetails.branch.Substring($gitDetails.branch.LastIndexOf('/')+1)
+            $newProjectName = $teamName + "_" + $repoName + "($repoBranch)"
+            Write-Output $projectName
+
+            $projectBody = @{
+                name = $newProjectName;
+                owningTeam = $owningTeam
+            }
+            Write-Output $result
+
+            $result = &"support/rest/sast/updateProject.ps1" $session $projectId $projectBody
         }
-        Write-Output $newProjectName
-        #$result = &"support/rest/sast/updateProject.ps1" $session $_.id $projectBody
-        Write-Output $result
+        catch{
+            Write-Output "No get settings for this projectId: $projectId"
+        }
     }
 
 }
