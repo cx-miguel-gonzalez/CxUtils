@@ -12,6 +12,7 @@ cxflow-batch-processor/cx-flow-1.6.26.jar
 
 *.log
 *.zip
+*.csv
 
 .DS_Store
 cx-sast-shell-tools/ProjectNameDuplicates.csv

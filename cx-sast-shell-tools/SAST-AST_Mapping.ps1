@@ -3,7 +3,7 @@ param(
     [System.Uri]$sast_url,
     [String]$username,
     [String]$password,
-    [String]$fullTeamName,
+    [String]$projectIds,
     [Switch]$dbg
 )
 
@@ -26,15 +26,21 @@ $teams = &"support/rest/sast/teams.ps1" $session
 $allpresets = &"support/rest/sast/getpresets.ps1" $session
 $allEngineConfigurations = &"support/rest/sast/getEngineConfigurations.ps1" $session
 
-
+$projectIdsList = $projectIds.Split(",")
+$targetProjects=@()
 $csvDetails = @()
+
 #set target projects
-if(!$fullTeamName){
+if(!$projectIds){
     $targetProjects = $allprojects
 }
 else{
-    $targetTeamId = $teams | Where-Object {$_.fullName -eq $fullTeamName}
-    $targetProjects = $allprojects | Where-Object {$_.teamID -eq $targetTeamId.id}
+    $allprojects | %{
+        $prjId = $_.id
+        if($projectIdsList -contains $_.id){
+            $targetProjects+=$_
+        }
+    }
     #Write-Output $targetProjects
 }
 #Write-Output $targetProjects.id
