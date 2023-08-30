@@ -23,12 +23,9 @@ $session = &"support/rest/sast/loginV2.ps1" $sast_url $username $password -dbg:$
 
 #Get the list of projects that have git configured for source control
 $allTeams = &"support/rest/sast/teams.ps1" $session
+#$spTeam = $allTeams | Where-Object{$_.name -eq "SP"}
+#$targetTeams = $allTeams | Where-Object{$_.parentId -eq $spTeam.id}
 
-
-$spTeam = $allTeams | Where-Object{$_.name -eq "SP"}
-
-$targetTeams = $allTeams | Where-Object{$_.parentId -eq $spTeam.id}
-
-$targetTeams | %{
-    &"$exportToolPath" -url $sast_url -user $username -pass $password -export "triage,projects" -project-team $team -projects-active-since 5000
+$allTeams | %{
+    &"$exportToolPath" --url $sast_url --user $username --pass $password --export "triage,projects" --project-team $_.name --projects-active-since 5000
 }
