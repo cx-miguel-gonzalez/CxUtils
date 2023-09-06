@@ -4,8 +4,8 @@ param(
 )
 
 ####CxOne Variable######
-$cx1Tenant=""
-$PAT=""
+$cx1Tenant="ps_na_miguel_gonzalez"
+$PAT="eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIzZGMzMzdlOS03YWY1LTQyMTUtOTY0OC04MWU1MmJmMTNlOTYifQ.eyJpYXQiOjE2ODkxODE2MzksImp0aSI6IjM0N2M5MTczLTQ2YmItNGJjOS05MDJiLTdkYTdlOTUzYTNjNSIsImlzcyI6Imh0dHBzOi8vaWFtLmNoZWNrbWFyeC5uZXQvYXV0aC9yZWFsbXMvcHNfbmFfbWlndWVsX2dvbnphbGV6IiwiYXVkIjoiaHR0cHM6Ly9pYW0uY2hlY2ttYXJ4Lm5ldC9hdXRoL3JlYWxtcy9wc19uYV9taWd1ZWxfZ29uemFsZXoiLCJzdWIiOiI4NmJlOGEzMC1mZTRiLTQ0ZTQtODBkZi0wY2Y5YWQzYjg3M2IiLCJ0eXAiOiJPZmZsaW5lIiwiYXpwIjoiYXN0LWFwcCIsInNlc3Npb25fc3RhdGUiOiJlZmM3NWIzYS0xMzJjLTRhOTItOTBiZS1hMjFmZTUwNDdmODYiLCJzY29wZSI6IiBvZmZsaW5lX2FjY2VzcyIsInNpZCI6ImVmYzc1YjNhLTEzMmMtNGE5Mi05MGJlLWEyMWZlNTA0N2Y4NiJ9.qkKgUWBYn2UyNDaIO8mhzBfZ_dkLzW7VteA8aALXSBU"
 $cx1URL="https://ast.checkmarx.net/api"
 $cx1TokenURL="https://iam.checkmarx.net/auth/realms/$cx1Tenant"
 $cx1IamURL="https://iam.checkmarx.net/auth/admin/realms/$cx1Tenant"
@@ -31,18 +31,18 @@ Import-Csv $csv_path | ForEach-Object {
     $validationLine++
     $projectName = $_.Cx1_ProjectName
     $groupName = $_.Cx1_Groups
-    $repoBranch = $_.SAST_ProjectGitBranch
+    $repoBranch = $_.SAST_ProjectGitBranch.replace("/refs/heads/","")
     $groupInfo = $cx1Groups | Where-Object {$_.name -eq $groupName}
 
     $projectData = $cx1Projects | Where-Object {$_.name -eq $projectName}
 
     $projectConfiguration = &"support/rest/cxone/getprojectconfig.ps1" $cx1Session $projectData.id
 
-    #update project groups
+    #update project groups and primary branch
     $projectDetails = @{
         name = $projectName
         groups = @($groupInfo.id)
-        mainBranch = Split-Path $_.SAST_ProjectGitBranch -Leaf
+        mainBranch = $repoBranch
     }
 
     $response = &"support/rest/cxone/updateproject.ps1" $cx1Session $projectData.id $projectDetails
@@ -65,7 +65,7 @@ Import-Csv $csv_path | ForEach-Object {
         name = "branch"
         category = "git"
         originLevel = "Project"
-        value = Split-Path $_.SAST_ProjectGitBranch -Leaf
+        value = $repoBranch
         valueType = "String"
     }
 
@@ -73,13 +73,17 @@ Import-Csv $csv_path | ForEach-Object {
     $fileExclusions = $_.SAST_FileExclusions.split(",");
     $folderExclusions = $_.SAST_FolderExclusions.split(",");
     $sastFilters = @()
-    foreach($exclusion in $fileExclusions){
-        $filter = "!"+$exclusion.trim()
-        $sastFilters+=$filter
+    if($fileExclusions){
+        foreach($exclusion in $fileExclusions){
+            $filter = "!"+$exclusion.trim()
+            $sastFilters+=$filter
+        }
     }
-    foreach($exclusion in $folderExclusions){
-        $filter = "!"+$exclusion.trim()
-        $sastFilters+=$filter
+    if($folderExclusions){
+        foreach($exclusion in $folderExclusions){
+            $filter = "!**/"+$exclusion.trim()+"/**"
+            $sastFilters+=$filter
+        }
     }
 
     $sastFilterSettings=@{
@@ -90,6 +94,7 @@ Import-Csv $csv_path | ForEach-Object {
         value = ($sastFilters -join ",")
         valueType = "Block"
     }
+    
 
     #create entry for preset
     $sastPresetSettings=@{
@@ -101,34 +106,43 @@ Import-Csv $csv_path | ForEach-Object {
         valueType = "List"
     }
 
-    $projectConfigUpdates+= $gitUrlSettings
-    $projectConfigUpdates+= $gitBranchSettings
-    $projectConfigUpdates+= $sastFilterSettings
+    #build the project configuration and update the project
+    if($_.SAST_ProjectUrl){
+        $projectConfigUpdates+= $gitUrlSettings
+        $projectConfigUpdates+= $gitBranchSettings
+    }
+
+    if($sastFilters.Length -gt 0){
+        $projectConfigUpdates+= $sastFilterSettings
+    }
     $projectConfigUpdates+= $sastPresetSettings
 
     $response = &"support/rest/cxone/updateprojectconfiguration.ps1" $cx1Session $projectData.id $projectConfigUpdates
 
 
-    #initiate scan for the project
-    $gitScanRequest = @{
-        type = "git"
-        handler = @{
-            branch = Split-Path $_.SAST_ProjectGitBranch -Leaf
-            repoUrl = $_.SAST_ProjectUrl
-        }
-        project = @{
-            id = $projectData.id
-        }
-        config = @(
-            @{
-                type = "sast"
-            },
-            @{
-                type = "sca"
-            }
-        )
-    }
+    #initiate scan for the project if we have git settings
+    if($repoBranch){
 
-    $response = &"support/rest/cxone/creategitscan.ps1" $cx1Session $gitScanRequest
+        $gitScanRequest = @{
+            type = "git"
+            handler = @{
+                branch = $repoBranch
+                repoUrl = $_.SAST_ProjectUrl
+            }
+            project = @{
+                id = $projectData.id
+            }
+            config = @(
+                @{
+                    type = "sast"
+                },
+                @{
+                    type = "sca"
+                }
+            )
+        }
+    
+        $response = &"support/rest/cxone/creategitscan.ps1" $cx1Session $gitScanRequest
+    }
 }
 
