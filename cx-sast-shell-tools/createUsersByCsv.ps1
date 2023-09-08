@@ -43,10 +43,7 @@ Import-Csv $csv_path | ForEach-Object {
         Write-Output $response
     }
 
-    #add the user to all the correct groups
-    $groupsDetails | %{
 
-    }
 }
 
 #get a list of all users
