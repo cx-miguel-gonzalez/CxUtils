@@ -6,10 +6,10 @@ param(
     [Switch]$dbg
 )
 
-if(!$sastUser){
+if(!$username){
     $credentials = Get-Credential -Credential $null
-    $sastUser = $credentials.UserName
-    $sastPassword = $credentials.GetNetworkCredential().Password
+    $username = $credentials.UserName
+    $password = $credentials.GetNetworkCredential().Password
 }
 
 
@@ -18,7 +18,7 @@ if(!$sastUser){
 setupDebug($dbg.IsPresent)
 
 #Login and generate token for SAST
-$sastSession = &"support/rest/sast/loginV2.ps1" $sastUrl $sastUser $sastPassword -dbg:$dbg.IsPresent
+$sastSession = &"support/rest/sast/loginV2.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
 
 #Get list of all SAST projects
 $sastProjects = &"support/rest/sast/projects.ps1" $sastSession
@@ -32,14 +32,16 @@ $sastProjects | %{
     $projectName = $_.Name
     $projectId = $_.id
     $teamId = $_.teamId
+    $teamInfo = $teams | Where-Object {$_.id -eq $teamId};
 
-    $duplicateProject = $sastProjects | Where-Object {$_.name -eq $projectName0}
+
+    $duplicateProject = $sastProjects | Where-Object {$_.name -eq $projectName}
     if ($duplicateProject.count -gt 1){
 
         $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
             ProjectName = $projectName;
-            SastId = $sprojectId;
-            parentTeam = $teams | Where-Object {$_.id -eq $teamId};
+            SastId = $projectId;
+            parentTeam = $teamInfo.fullName;
         })
         $duplicateProjects += $csvEntry
     }
