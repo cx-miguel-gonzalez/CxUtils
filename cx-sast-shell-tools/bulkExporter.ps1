@@ -15,7 +15,7 @@ if(!$username){
 
 . "support/debug.ps1"
 Add-Type -AssemblyName System.Web
-
+$exportLog = "bulkExport.log"
 setupDebug($dbg.IsPresent)
 
 #Login and generate token
@@ -27,5 +27,7 @@ $allTeams = &"support/rest/sast/teams.ps1" $session
 #$targetTeams = $allTeams | Where-Object{$_.parentId -eq $spTeam.id}
 
 $allTeams | %{
-    &"$exportToolPath" --url $sast_url --user $username --pass $password --export "triage,projects" --project-team $_.name --projects-active-since 5000
+    $command = [String]::Format("{0} --url {1} --user {2} --pass ***** --export {3} --project-team {4} --projects-active-since 50000", $exportToolPath, $sast_url, $username, "triage,projects", $_.name)
+    Write-Output "$command" > $exportLog
+    &"$exportToolPath" --url $sast_url --user $username --pass $password --export "triage,projects" --project-team $_.name --projects-active-since 5000 > $exportLog
 }
