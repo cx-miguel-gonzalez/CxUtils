@@ -22,7 +22,7 @@ setupDebug($dbg.IsPresent)
 # - probe for report complete
 # - download report
 
-$session = &"support/rest/sast/login.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
+$session = &"support/rest/sast/loginV2.ps1" $sast_url $username $password -dbg:$dbg.IsPresent
 
 $timer = $(Get-Date)
 Write-Output "Fetching projects"

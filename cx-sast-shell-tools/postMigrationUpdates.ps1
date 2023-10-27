@@ -15,6 +15,7 @@ $csv_path=""
 
 setupDebug($dbg.IsPresent)
 
+Add-Type -AssemblyName System.Web
 
 #Generate token for CxOne
 $cx1Session = &"support/rest/cxone/apiTokenLogin.ps1" $cx1TokenURL $cx1URL "$cx1IamURL" $cx1Tenant $PAT
@@ -29,6 +30,11 @@ $cx1Groups = &"support/rest/cxone/getgroups.ps1" $cx1Session
 $validationLine = 0
 Import-Csv $csv_path | ForEach-Object {
     $validationLine++
+    $sleepCheck = $validationLine % 10
+    if($sleepCheck -eq 0){
+        start-sleep -Seconds 300
+    }
+    
     $projectName = $_.Cx1_ProjectName
     $groupName = $_.Cx1_Groups
     $repoBranch = $_.SAST_ProjectGitBranch.replace("/refs/heads/","")
@@ -75,7 +81,7 @@ Import-Csv $csv_path | ForEach-Object {
     $sastFilters = @()
     if($fileExclusions){
         foreach($exclusion in $fileExclusions){
-            $filter = "!"+$exclusion.trim()
+            $filter = "!*"+$exclusion.trim()
             $sastFilters+=$filter
         }
     }
@@ -145,4 +151,3 @@ Import-Csv $csv_path | ForEach-Object {
         $response = &"support/rest/cxone/creategitscan.ps1" $cx1Session $gitScanRequest
     }
 }
-

@@ -14,6 +14,7 @@ if(!$username){
 }
 
 . "support/debug.ps1"
+Add-Type -AssemblyName System.Web
 
 setupDebug($dbg.IsPresent)
 
