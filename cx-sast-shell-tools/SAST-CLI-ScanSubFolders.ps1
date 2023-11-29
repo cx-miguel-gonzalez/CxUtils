@@ -1,3 +1,12 @@
+##################################################################
+# To use this script you will need to update lines 27, 28, and 29 with the following
+#   teamPath        | full team path (CxServer/SP/ParentTeam)
+#   cliPath         | full path to the CLI executable (C:\CLI\CxRunConsole.cmd)
+#   targetDirector  | full path of the folder that you want to scan. This script will scan all sub folders (C:\TargetFolder)
+#
+#   Example for running script after updating script:
+#       .\SAST-CLI-ScanSubFolders.ps1 -sast_url https://my.checkmarx.com
+##################################################################
 param(
     [Parameter(Mandatory = $true)]
     [System.Uri]$sast_url,
