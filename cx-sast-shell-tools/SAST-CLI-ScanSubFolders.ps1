@@ -5,7 +5,7 @@
 #   targetDirector  | full path of the folder that you want to scan. This script will scan all sub folders (C:\TargetFolder)
 #
 #   Example for running script after updating script:
-#       .\SAST-CLI-ScanSubFolders.ps1 -sast_url https://my.checkmarx.com
+#       .\SAST-CLI-ScanSubFolders.ps1 -sast_url https://my.checkmarx.com -projectName "NameOfProject"
 ##################################################################
 param(
     [Parameter(Mandatory = $true)]

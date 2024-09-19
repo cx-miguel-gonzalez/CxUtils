@@ -27,7 +27,16 @@ setupDebug($dbg.IsPresent)
 $sastSession = &"support/rest/sast/loginV2.ps1" $sastUrl $sastUser $sastPassword -dbg:$dbg.IsPresent
 
 #Get list of all SAST projects
-$sastProjects = &"support/rest/sast/projects.ps1" $sastSession
+$sastProjects = &"support/rest/sast/projects.ps1" $sastSession "2.2"
+#specific for humana
+$minusGovSastProjects = $sastProjects | Where-Object {$_.teamId -ne 182}
+#remove branched projects
+$targetSastProjects = $minusGovSastProjects | where-object {$_.isbranched -ne 1}
+
+Write-Output "This is the count for sast project:" + $sastProjects.count
+Write-Output "This is the count for sast project minus branched:" + $targetSastProjects.count
+
+exit 
 
 #Generate token for CxOne
 $cx1Session = &"support/rest/cxone/apiTokenLogin.ps1" $cx1TokenURL $cx1URL $cx1IamURL $cx1Tenant $PAT
@@ -39,15 +48,15 @@ $cx1Projects = $cx1ProjectsResponse.projects
 #Match the projects based on the name
 $missingProjects=@()
 
-$sastProjects | %{
+$targetSastProjects | %{
     $sastProjectName = $_.Name
     $sastProjectId = $_.id
 
-    Clear-Variable $sastProject
-    $sastProject = $cx1Projects| Where-Object {$_.name -eq $sastProjectName}
+    Clear-Variable $cx1Project
+    $cx1Project = $cx1Projects| Where-Object {$_.name -eq $sastProjectName}
     
-    if(!$sastProject){
-
+    if(!$cx1Project){
+        write-output "sast project missing $sastProjectName"
         $csvEntry = New-Object -TypeName psobject -Property ([Ordered]@{
             ProjectName = $sastProjectName;
             SastId = $sastProjectId;
@@ -56,6 +65,9 @@ $sastProjects | %{
         
         $missingProjects += $csvEntry
         
+    }
+    else {
+        Write-Output "CxOne project found"
     }
 }
 

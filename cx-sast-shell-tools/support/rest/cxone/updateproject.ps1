@@ -13,7 +13,7 @@ $request_url = New-Object System.Uri $rest_url
 Write-Debug "Update Projects API URL: $request_url"
 
 $headers = GetRestHeadersForJsonRequest($session)
-$body = $projectUpdate | ConvertTo-Json
+$body = $projectUpdate | ConvertTo-Json -Depth 10
 
-$response = Invoke-RestMethod -Method 'PUT' -Uri $request_url -Headers $headers -Body $body
+$response = Invoke-RestMethod -Method 'PUT' -Uri $request_url -ContentType 'application/json' -Headers $headers -Body $body
 return $response

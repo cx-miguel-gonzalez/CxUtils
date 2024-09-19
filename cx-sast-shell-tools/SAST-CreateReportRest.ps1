@@ -5,6 +5,7 @@ param(
     [String]$username,
     [Parameter(Mandatory = $true)]
     [String]$password,
+    [String]$projectIds,
     [Switch]$dbg
 )
 
@@ -33,17 +34,30 @@ $session = &"support/rest/sast/loginV2.ps1" $sast_url $username $password -dbg:$
 
 $timer = $(Get-Date)
 Write-Output "Fetching projects"
-$projects = &"support/rest/sast/projects.ps1" $session
-Write-Output "$($projects.Length) projects fetched - elapsed time $($(Get-Date).Subtract($timer))"
-$projects | % { Write-Debug $_ } 
+$projectIdsList = $projectIds.Split(",")
+$allprojects = &"support/rest/sast/projects.ps1" $session
+$targetProjects = @()
+#set target projects
+if(!$projectIds){
+    $targetProjects = $allprojects
+}
+else{
+    $allprojects | %{
+        $prjId = $_.id
+        if($projectIdsList -contains $_.id){
+            $targetProjects+=$_
+        }
+    }
+}
 
+Write-Output "$($targetProjects.Length) projects fetched - elapsed time $($(Get-Date).Subtract($timer))"
 
 $timer = $(Get-Date)
 Write-Output "Fetching teams"
 $teams = &"support/rest/sast/teams.ps1" $session
 
 Write-Output "Fetching Reports"
-$projects | % {
+$targetProjects | % {
     
     $scans = &"support/rest/sast/scans.ps1" $session $_.id
     $projectName = $_.name
@@ -71,7 +85,6 @@ $projects | % {
         $status = [String]::Format("Report successfully created for id = {0}", $reportId)
 
         $outputPath = $PSScriptRoot + "\Output"
-        write-output "teamName = $teamName"
         &"support/rest/sast/getreport.ps1" $session $reportId $teamName $projectName $outputPath
     }else{
         $status = [String]::Format("Report creation failed for id = {0}", $reportId)

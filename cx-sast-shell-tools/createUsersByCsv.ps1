@@ -20,48 +20,64 @@ setupDebug($dbg.IsPresent)
 #Generate token for CxOne
 $cx1Session = &"support/rest/cxone/apiTokenLogin.ps1" $cx1TokenURL $cx1URL "$cx1IamURL" $cx1Tenant $PAT
 
-#Get list of CxOne groups
+#Get list of CxOne groups and users
 $cx1Groups = &"support/rest/cxone/getgroups.ps1" $cx1Session
-
-#Create all of the users in the list
-$validationLine = 0
-Import-Csv $csv_path | ForEach-Object {
-    $validationLine++
-    
-    #create the user
-    $userInput=@{
-        firstName = $_.firstName
-        lastName = $_.lastName
-        username = $_.username
-        email = $_.email
-    }
-
-    try{
-        $response = &"support/rest/cxone/createuser.ps1" $cx1Session $userInput
-    }
-    catch{        
-        Write-Output $response
-    }
-
-
-}
-
-#get a list of all users
 $cx1Users = &"support/rest/cxone/getusers.ps1" $cx1Session
 
-#add each user to the correct groups
+#Create all of the users in the list
+
+##add error handling for users that already exist 
 $validationLine = 0
 Import-Csv $csv_path | ForEach-Object {
     $validationLine++
+    $firstName = $_.firstName
+    $lastName = $_.lastName
     $username = $_.username
-    $userInfo = $cx1Users | Where-Object{$_.username -eq $username}
-
-    $groups = $_.groups.split(',')
+    $email = $_.email
+    #check if user already exists
+    $userExists = $cx1Users | Where-Object {$_.email -eq $email}
+    if(!$userExists){
+        #create the user
+        $userInput=@{
+            firstName = $firstName
+            lastName = $lastName
+            username = $username
+            email = $email
+        }
     
+        try{
+            #$response = &"support/rest/cxone/createuser.ps1" $cx1Session $userInput
+        }
+        catch{        
+            Write-Output $response
+        }
+    }
+}
+
+#add each user to the correct groups
+$cx1Users = &"support/rest/cxone/getusers.ps1" $cx1Session
+$validationLine = 0
+Import-Csv $csv_path | ForEach-Object {
+    $validationLine++
+    $email = $_.email.Trim()
+    $userInfo = $cx1Users | Where-Object {$_.email -eq $email}
+    $groups = $_.groups.split(',')
     #generate list of groups 
     $groups | %{
         $groupName = $_
         $groupDetails=$cx1Groups | Where-Object{$_.name -eq $groupName}
+        #create group if it does not exist
+        if(!$groupDetails){
+            Write-output "Could not find $groupName"
+            $groupInput = @{}
+            $groupInput.Add("name",$groupName)
+            $roleNames = @("Developer")
+            $groupRoles = @{"ast-app"=$roleNames}
+            $groupInput.Add("clientRoles",$groupRoles)
+
+            #create group
+            #$response = &"support/rest/cxone/createGroup.ps1" $cx1Session $groupInput
+        }
         #add user to the group
         try{
             $response = &"support/rest/cxone/addusertogroup.ps1" $cx1Session $userInfo.id $groupDetails.id

@@ -5,7 +5,7 @@ param(
 
 . "support/rest_util.ps1"
 
-$rest_url = [String]::Format("{0}/users", $session.auth_url)
+$rest_url = [String]::Format("{0}/users?max=1000", $session.auth_url)
 $request_url = New-Object System.Uri $rest_url
 
 Write-Debug $request_url
