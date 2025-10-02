@@ -21,6 +21,3 @@ Write-Debug $body
 
 $response = Invoke-RestMethod -Method 'Post' -Uri $request_url -Headers $headers -Body $body -ContentType 'application/json'
 return $response
-
-
-#https://ast.checkmarx.net/api/repos-manager/scms/1/reimport?authCode=5ddda1090a48fea0b926&projectId=5c5d8de7-7c97-4954-975a-521a
