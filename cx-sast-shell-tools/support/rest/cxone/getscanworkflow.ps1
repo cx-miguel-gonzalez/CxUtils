@@ -1,14 +1,15 @@
 param(
     [Parameter(Mandatory=$true)]
     [hashtable]$session,
-    [string]$scmId,
-    [string]$authCode
+    [string]$scanId,
+    [string]$limit
 )
 
 . "support/rest_util.ps1"
+$rest_url = [String]::Format("{0}/scans/{1}/workflow", $session.base_url, $scanId)
+$request_url = New-Object System.Uri $rest_url
 
-$rest_url = [String]::Format("{0}/api/repos-manager/scms/{1}/user/orgs?authCode={2}", $session.base_url, $scmId, $authCode)
-Write-Debug "SCM Orgs API URL: $request_url"
+Write-Debug "Get scans API URL: $request_url"
 
 $headers = GetRestHeadersForJsonRequest($session)
 
