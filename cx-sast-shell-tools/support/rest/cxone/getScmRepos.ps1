@@ -2,12 +2,19 @@ param(
     [Parameter(Mandatory=$true)]
     [hashtable]$session,
     [Parameter(Mandatory=$true)]
-    [string]$orgName
+    [string]$orgName,
+    [string]$authCode,
+    [version]$version
 )
 
 . "support/rest_util.ps1"
 
-$rest_url = [String]::Format("{0}/repos-manager/scms/1/orgs/{1}/repos?authCode=d2e5714b965c732d57eb&isUser=false&page=1", $session.base_url, $orgName)
+if($version -eq "1"){
+    $rest_url = [String]::Format("{0}/repos-manager/scms/{1}/orgs/{2}/repos?authCode={3}&isUser=false&page=1", $session.base_url, $scmId, $scmOrg, $authCode)
+}
+else{
+    $rest_url = [String]::Format("{0}/repos-manager/v2/scms/{1}/orgs/{2}/repos?authCode={3}&isUser=false&page=1", $session.base_url, $scmId, $scmOrg, $authCode)
+}
 $request_url = New-Object System.Uri $rest_url
 
 Write-Debug "SCM Repos for an org API URL: $request_url"

@@ -25,4 +25,3 @@ $headers = GetRestHeadersForJsonRequest($session)
 $response = Invoke-RestMethod -Method 'Get' -Uri $request_url -Headers $headers
 return $response
 
-#https://ast.checkmarx.net/api/repos-manager/v2/scms/1/orgs/MGLcx/repos?authCode=5ddda1090a48fea0b926&isUser=false
