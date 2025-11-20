@@ -7,13 +7,13 @@ param(
 #Please update with the values for your environment and respective region
 #update the url based on your login page. ex: https://ast.checkmarx.net, https://us.ast.checkmarx.net
 #add an API key as the $PAT value
-$cx1Tenant=""
+$cx1Tenant="ps_na_miguel_gonzalez"
 $PAT=""
 $cx1URL="https://ast.checkmarx.net/api"
 $cx1TokenURL="https://iam.checkmarx.net/auth/realms/$cx1Tenant"
 $cx1IamURL="https://iam.checkmarx.net/auth/admin/realms/$cx1Tenant"
 $scmType="cloud"
-$scmInstanceName="github" #only if scmType is self-hosted
+$scmInstanceName="" #only if scmType is self-hosted
 $scmOrg=""
 $scmAuthCode=""
 $csv_path=""
@@ -37,20 +37,20 @@ $cx1ProjectsResponse = &"support/rest/cxone/getprojects.ps1" $cx1Session
 $cx1Projects = $cx1ProjectsResponse.projects
 
 #Get list of repositories that have been imported
-$scmProjectsResponse= &"support/rest/cxone/getProjectsFromSCM.ps1" $cx1Session $scmAuthCode $targetScm.id $scmOrg "1"
-$allRepos = $scmProjectsResponse.repoWebDtoList
+#$scmProjectsResponse= &"support/rest/cxone/getProjectsFromSCM.ps1" $cx1Session $scmAuthCode $targetScm.id $scmOrg "1"
+#$allRepos = $scmProjectsResponse.repoWebDtoList
 
 #Determine target projects
 if($csv_path -ne $null){
     $targetRepos = @()
     Import-Csv $csv_path | ForEach-Object {
     $projectName = $_.ProjectName
-    $target = $allRepos | Where-Object {$_.fullName -eq $projectName}
+    $target = $cx1Projects | Where-Object {$_.name -eq $projectName}
     $targetRepos += $target
     }
 }
 else{
-    $targetRepos = $allRepos | Where-Object {$_.repoId -ne $null}
+    $targetRepos = $cx1Projects | Where-Object {$_.repoId -ne $null}
 }
 
 
