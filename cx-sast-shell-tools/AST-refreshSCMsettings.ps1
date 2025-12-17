@@ -7,16 +7,16 @@ param(
 #Please update with the values for your environment and respective region
 #update the url based on your login page. ex: https://ast.checkmarx.net, https://us.ast.checkmarx.net
 #add an API key as the $PAT value
-$cx1Tenant="ps_na_miguel_gonzalez"
+$cx1Tenant=""
 $PAT=""
 $cx1URL="https://ast.checkmarx.net/api"
 $cx1TokenURL="https://iam.checkmarx.net/auth/realms/$cx1Tenant"
 $cx1IamURL="https://iam.checkmarx.net/auth/admin/realms/$cx1Tenant"
 $scmType="cloud"
-$scmInstanceName="" #only if scmType is self-hosted
+$scmInstanceName="" #github, bitbucket, azure, gitlab or self-hosted label
 $scmOrg=""
 $scmAuthCode=""
-$csv_path=""
+#$csv_path=$null
 
 
 . "support/debug.ps1"
@@ -37,11 +37,11 @@ $cx1ProjectsResponse = &"support/rest/cxone/getprojects.ps1" $cx1Session
 $cx1Projects = $cx1ProjectsResponse.projects
 
 #Get list of repositories that have been imported
-#$scmProjectsResponse= &"support/rest/cxone/getProjectsFromSCM.ps1" $cx1Session $scmAuthCode $targetScm.id $scmOrg "1"
-#$allRepos = $scmProjectsResponse.repoWebDtoList
+$orgReposResponse= &"support/rest/cxone/getProjectsFromSCM.ps1" $cx1Session $scmAuthCode $targetScm.id $scmOrg "50"
+$allRepos = $orgReposResponse.repos
 
 #Determine target projects
-if($csv_path -ne $null){
+if($csv_path -ne $null -and $csv_path -ne ""){
     $targetRepos = @()
     Import-Csv $csv_path | ForEach-Object {
     $projectName = $_.ProjectName
@@ -50,16 +50,16 @@ if($csv_path -ne $null){
     }
 }
 else{
-    $targetRepos = $cx1Projects | Where-Object {$_.repoId -ne $null}
+    $targetRepos = $cx1Projects | Where-Object {$_.imported_proj_name -in $allRepos.fullName}
 }
-
 
 #1. get project id for each of the repos
 #2. update refresh the repository settings
 #3. build out the scan request
 #       - need scm id, repo origin, project name, scanner types
 $validationLine = 0
-
+$refreshErrors = @()
+$refreshSuccesses = @()
 $targetRepos | %{
     $validationLine++
     $repoId = $_.repoId
@@ -108,6 +108,38 @@ $targetRepos | %{
     
     
     #Refresh Repository Setting
-    &"support/rest/cxone/refreshRepositorySettings.ps1" $cx1Session $targetScm.id $scmAuthCode $targetProject.id $scmSettings
+    try{
+        $response = &"support/rest/cxone/refreshRepositorySettings.ps1" $cx1Session $targetScm.id $scmAuthCode $targetProject.id $scmSettings
+        Write-Output $response
 
+        $refreshSuccesses += $targetProject
+    }
+    catch{
+        $refreshErrors += $targetProject
+        Write-Output "Error refreshing SCM settings for project: $($targetProject.name)"
+    }
+    Write-Output "Refreshed SCM settings for project: $($targetProject.name)"
+
+    
+}
+
+# Export results to CSV files
+$timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$successCsvPath = "refreshSuccesses-$timestamp.csv"
+$errorsCsvPath = "repoErrors-$timestamp.csv"
+
+if ($refreshSuccesses -and $refreshSuccesses.Count -gt 0) {
+	$refreshSuccesses | Export-Csv -Path $successCsvPath -NoTypeInformation
+	Write-Output "Wrote refresh successes to: $successCsvPath"
+}
+else {
+	Write-Output "No refresh successes to write."
+}
+
+if ($refreshErrors -and $refreshErrors.Count -gt 0) {
+	$refreshErrors | Export-Csv -Path $errorsCsvPath -NoTypeInformation
+	Write-Output "Wrote repo errors to: $errorsCsvPath"
+}
+else {
+	Write-Output "No repo errors to write."
 }
