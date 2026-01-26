@@ -12,10 +12,10 @@ $PAT=""
 $cx1URL="https://ast.checkmarx.net/api"
 $cx1TokenURL="https://iam.checkmarx.net/auth/realms/$cx1Tenant"
 $cx1IamURL="https://iam.checkmarx.net/auth/admin/realms/$cx1Tenant"
-$scmType="cloud"
+$scmType="cloud" #cloud or slef-hosted
 $scmInstanceName="" #github, bitbucket, azure, gitlab or self-hosted label
 $scmOrg=""
-$scmAuthCode=""
+$scmAuthCode="" #Personal Access Token for the SCM
 #$csv_path=$null
 
 
@@ -50,8 +50,17 @@ if($csv_path -ne $null -and $csv_path -ne ""){
     }
 }
 else{
-    $targetRepos = $cx1Projects | Where-Object {$_.imported_proj_name -in $allRepos.fullName}
+    if($scmInstanceName -eq "github"){
+        $targetRepos = $cx1Projects | Where-Object {$_.imported_proj_name -in $allRepos.fullName}
+    }
+    elseif ($scmInstanceName -eq "azure") {
+        $allRepoFullNames = $allRepos | ForEach-Object {
+            "$($scmOrg)/$($_.name)"
+        }
+        $targetRepos = $cx1Projects | Where-Object {$_.imported_proj_name -in $allRepoFullNames}
+    }
 }
+
 
 #1. get project id for each of the repos
 #2. update refresh the repository settings
