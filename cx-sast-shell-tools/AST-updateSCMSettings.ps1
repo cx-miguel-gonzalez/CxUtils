@@ -41,8 +41,16 @@ $targetProjects | %{
     
     #get the scm settings for the project
     if($repoId){
+        #enable/disable scanners as needed. In this example, we are enabling the OSSF Scorecard and Secrets Detection scanners for all projects with a repoId. You can modify as needed based on your requirements.
         $scmSettings = &"support/rest/cxone/getProjectSCMsettings.ps1" $cx1Session $repoId    
-        $scmSettings.containerScannerEnabled = $true
+#        $scmSettings.sastScannerEnabled = $true
+#        $scmSettings.scaScannerEnabled = $true
+#        $scmSettings.kicsScannerEnabled = $true
+#        $scmSettings.apiSecScannerEnabled = $true
+#        $scmSettings.containerScannerEnabled = $true
+        $scmSettings.ossfScoreCardScannerEnabled = $true
+        $scmSettings.secretsDetectionScannerEnabled = $true
+
 
         #update the scm settings
         $scmSettingsBody = $scmSettings | ConvertTo-Json -Depth 10
