@@ -48,8 +48,9 @@ $targetProjects | %{
 #        $scmSettings.kicsScannerEnabled = $true
 #        $scmSettings.apiSecScannerEnabled = $true
 #        $scmSettings.containerScannerEnabled = $true
-        $scmSettings.ossfScoreCardScannerEnabled = $true
-        $scmSettings.secretsDetectionScannerEnabled = $true
+#        $scmSettings.ossfScoreCardScannerEnabled = $true
+#        $scmSettings.secretsDetectionScannerEnabled = $true
+        $scmSettings.webhookEnabled = $true
 
 
         #update the scm settings
