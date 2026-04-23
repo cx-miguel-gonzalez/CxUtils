@@ -100,10 +100,10 @@ $targetRepos | %{
     if ($targetScmSettings.containerScannerEnabled -eq $true){
         $scanEngines += "containers"
     }
-    if ($targetScmSettings.ossfSecoreCardScannerEnabled -eq $true){
+    if ($targetScmSettings.ossfScoreCardScannerEnabled -eq $true){
         $scanEngines += "scorecard"
     }
-    if ($targetScmSettings.secretsDerectionScannerEnabled -eq $true){
+    if ($targetScmSettings.secretsDetectionScannerEnabled -eq $true){
         $scanEngines += "2ms"
     }
 
