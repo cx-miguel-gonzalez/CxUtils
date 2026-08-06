@@ -21,6 +21,7 @@ $cx1IamURL="https://iam.checkmarx.net/auth/admin/realms/$cx1Tenant"
 #   ProjectId                - CxOne project ID
 #   ProjectName              - exact name of the CxOne project
 #   CurrentSCM               - (informational) name of the existing SCM integration
+#   CurrentOrg               - (informational) org/namespace identifier of the existing SCM connection
 #   CurrentRepoUrl           - (informational) existing repo URL
 #   CurrentProtectedBranches - (informational) existing protected branches, comma-separated
 #   TargetScmType            - SCM type for new connection (github, bitbucket, azure, gitlab, githubApp)
@@ -66,6 +67,13 @@ if ($generateCsv.IsPresent) {
         $scmMap[[int]$scm.id] = $scm
     }
 
+    Write-Output "Retrieving SCM organizations..."
+    $orgsResponse = &"support/rest/cxone/getAllScmOrgs.ps1" $cx1Session
+    $orgMap = @{}
+    foreach ($org in $orgsResponse.orgItems) {
+        $orgMap[[int]$org.orgId] = $org
+    }
+
     $csvRows = @()
     $counter = 0
 
@@ -87,10 +95,14 @@ if ($generateCsv.IsPresent) {
             $scmEntry       = $scmMap[[int]$scmSettings.scmId]
             $currentScmName = if ($scmEntry) { $scmEntry.name } else { $scmSettings.scm.typeName }
 
+            $orgEntry       = $orgMap[[int]$scmSettings.orgId]
+            $currentOrg     = if ($orgEntry) { $orgEntry.orgIdentity } else { "" }
+
             $csvRows += [PSCustomObject]@{
                 ProjectId                = $project.id
                 ProjectName              = $project.name
                 CurrentSCM               = $currentScmName
+                CurrentOrg               = $currentOrg
                 CurrentRepoUrl           = $scmSettings.url
                 CurrentProtectedBranches = $currentBranches
                 TargetScmType            = ""
