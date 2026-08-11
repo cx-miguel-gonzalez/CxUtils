@@ -78,6 +78,28 @@ function Find-TenantNodes {
         return $tenantNodes
     }
     
+    function Wait-ForQueryEditorSessionReady {
+        param(
+            [Parameter(Mandatory=$true)]
+            [hashtable]$session,
+            [Parameter(Mandatory=$true)]
+            [string]$editorSessionId,
+            [Parameter(Mandatory=$true)]
+            [string]$requestId
+        )
+
+        do {
+            $statusResponse = &"support/rest/cxone/queryEditorRetrieveRequestStatus.ps1" $session $editorSessionId $requestId
+
+            if (-not $statusResponse.completed) {
+                Write-Debug "  Waiting for query editor session to be ready: $($statusResponse.value.message)"
+                Start-Sleep -Seconds 5
+            }
+        } while (-not $statusResponse.completed)
+
+        return $statusResponse
+    }
+
     function Get-LeafQueries {
         param(
             [Parameter(Mandatory=$true)]
@@ -136,11 +158,13 @@ if ($generateSourceCustomizations.IsPresent) {
         Write-Output "Processing language: $language"
 
         $editorSessionId = $null
+        $requestId       = $null
 
         while (-not $editorSessionId) {
             try {
                 $editorSession   = &"support/rest/cxone/queryEditorCreateSession.ps1" $sourceSession "sast" $language
                 $editorSessionId = $editorSession.id
+                $requestId       = $editorSession.data.requestID
                 Write-Debug "  Editor session ID for $language`: $editorSessionId"
             } catch {
                 $errorBody = Get-ErrorResponseBody $_
@@ -164,8 +188,8 @@ if ($generateSourceCustomizations.IsPresent) {
         }
 
         try {
-            # Give the backend a moment to finish allocating the session before requesting queries
-            Start-Sleep -Seconds 10
+            # Poll until the SAST engine backing this session reports as ready
+            Wait-ForQueryEditorSessionReady $sourceSession $editorSessionId $requestId | Out-Null
 
             $queriesTree = &"support/rest/cxone/queryEditorGetQueriesForSession.ps1" $sourceSession $editorSessionId
             $tenantNodes = Find-TenantNodes $queriesTree
@@ -349,11 +373,13 @@ if ($importTargetCustomizations.IsPresent) {
         Write-Output "  Creating queries for language: $language"
 
         $editorSessionId = $null
+        $requestId       = $null
 
         while (-not $editorSessionId) {
             try {
                 $editorSession   = &"support/rest/cxone/queryEditorCreateSession.ps1" $targetSession "sast" $language
                 $editorSessionId = $editorSession.id
+                $requestId       = $editorSession.data.requestID
                 Write-Debug "  Editor session ID for $language`: $editorSessionId"
             } catch {
                 $errorBody = Get-ErrorResponseBody $_
@@ -384,8 +410,8 @@ if ($importTargetCustomizations.IsPresent) {
             continue
         }
 
-        # Give the backend a moment to finish allocating the session before creating queries
-        Start-Sleep -Seconds 5
+        # Poll until the SAST engine backing this session reports as ready
+        Wait-ForQueryEditorSessionReady $targetSession $editorSessionId $requestId | Out-Null
 
         try {
             foreach ($query in $languageGroup.Group) {
