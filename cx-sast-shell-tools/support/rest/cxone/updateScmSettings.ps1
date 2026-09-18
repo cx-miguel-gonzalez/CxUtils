@@ -17,5 +17,5 @@ $headers = GetRestHeadersForJsonRequest($session)
 #$body = $scmSettings | ConvertTo-Json -Depth 10
 
 
-$response = Invoke-RestMethod -Method 'PUT' -Uri $request_url -ContentType 'application/json' -Headers $headers -Body $scmSettings
+$response = Invoke-RestMethod -Method 'PATCH' -Uri $request_url -ContentType 'application/json' -Headers $headers -Body $scmSettings
 return $response
