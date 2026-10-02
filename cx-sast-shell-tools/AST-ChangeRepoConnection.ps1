@@ -3,6 +3,7 @@ param(
     [string]$csvPath,
     [Switch]$autoScan,
     [Switch]$generateCsv,
+    [string]$ProjectNamePattern,
     [string]$outputPath = "current_scm_project_information.csv",
     [int]$batchSize = 25
 )
@@ -52,7 +53,30 @@ Write-Output "Retrieving all projects..."
 $cx1ProjectsResponse = &"support/rest/cxone/getprojects.ps1" $cx1Session
 $cx1Projects = $cx1ProjectsResponse.projects
 
-$projectsWithRepo = $cx1Projects | Where-Object { $_.repoId -ne $null -and $_.repoId -ne "" }
+$namePatterns = @()
+if ($ProjectNamePattern) {
+    $namePatterns = $ProjectNamePattern -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+}
+
+$projectsWithRepo = $cx1Projects | Where-Object {
+    $project = $_
+    if ($project.repoId -eq $null -or $project.repoId -eq "") {
+        return $false
+    }
+    if ($namePatterns.Count -eq 0) {
+        return $true
+    }
+    foreach ($pattern in $namePatterns) {
+        if ($project.name -like $pattern) {
+            return $true
+        }
+    }
+    return $false
+}
+
+if ($namePatterns.Count -gt 0) {
+    Write-Output "Filtering projects to those matching: $($namePatterns -join ', ')"
+}
 Write-Output "Total projects: $($cx1Projects.Count) | Projects with repo connections: $($projectsWithRepo.Count)"
 
 if ($generateCsv.IsPresent) {
